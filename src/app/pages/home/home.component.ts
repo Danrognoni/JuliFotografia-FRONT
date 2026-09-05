@@ -2,7 +2,6 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HeaderComponent } from '../../components/header/header.component';
 import { HeroComponent } from '../../components/hero/hero.component';
-import { VignettesComponent } from '../../components/vignettes/vignettes.component';
 import { StoryCardComponent } from '../../components/story-card/story-card.component';
 import { PortfolioComponent } from '../../components/portfolio/portfolio.component';
 import { AboutComponent } from '../../components/about/about.component';
@@ -24,9 +23,8 @@ import { Photo } from '../../models/photo.model';
     CommonModule,
     HeaderComponent,
     HeroComponent,
-    VignettesComponent,
-    StoryCardComponent,
     PortfolioComponent,
+    StoryCardComponent,
     AboutComponent,
     ContactComponent,
     FooterComponent,
@@ -53,25 +51,19 @@ import { Photo } from '../../models/photo.model';
 
       <!-- Main Dennis Wanderlight Presentation Flow -->
       <main>
-        <!-- 1. Hero Section (Screenshot 1) -->
+        <!-- 1. Hero Section -->
         <app-hero 
           (editHero)="openEditHeroModal()"
         />
 
-        <!-- 2. Vignettes from the Edge (Screenshot 2) -->
-        <app-vignettes 
-          (editVignettes)="openEditVignettesModal()"
+        <!-- 2. Portfolio Section: Asymmetric Mosaic of Albums (Screenshot 1) -->
+        <app-portfolio 
+          (openUpload)="openNewPhotoModal()"
         />
 
         <!-- 3. Beyond the Frame / Story Card (Screenshot 3) -->
         <app-story-card 
           (editStory)="openEditStoryModal()"
-        />
-
-        <!-- 4. Selected Works Gallery & Fullscreen Lightbox -->
-        <app-portfolio 
-          (openUpload)="openNewPhotoModal()"
-          (editPhoto)="openEditPhotoModal($event)"
         />
 
         <!-- 5. About Me / The Story -->

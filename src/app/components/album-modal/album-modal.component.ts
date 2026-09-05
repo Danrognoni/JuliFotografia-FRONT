@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AlbumService } from '../../services/album.service';
@@ -12,17 +12,17 @@ import { Album } from '../../models/album.model';
   template: `
     <div class="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
       <div 
-        class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 md:p-8 border border-neutral-200 relative overflow-hidden"
+        class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 md:p-8 border border-neutral-200 relative overflow-hidden"
         (click)="$event.stopPropagation()"
       >
         <!-- Modal Header -->
         <div class="flex items-center justify-between pb-4 border-b border-neutral-100">
           <div>
             <span class="text-[10px] font-bold uppercase tracking-widest text-neutral-400 block mb-1">
-              Administración de Álbumes
+              {{ albumToEdit ? 'Editar Álbum' : 'Crear Álbum' }}
             </span>
             <h3 class="text-xl font-bold tracking-tight text-neutral-900">
-              Nuevo Álbum
+              {{ albumToEdit ? 'Editar Colección' : 'Nuevo Álbum de Expedición' }}
             </h3>
           </div>
           <button 
@@ -38,35 +38,92 @@ import { Album } from '../../models/album.model';
         </div>
 
         <!-- Form -->
-        <form (ngSubmit)="onSubmit()" class="py-5 space-y-4">
+        <form (ngSubmit)="onSubmit()" class="py-5 space-y-4 max-h-[75vh] overflow-y-auto pr-1">
+          <!-- Título -->
           <div>
             <label class="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">
-              Nombre del Álbum *
+              Título del Álbum *
             </label>
             <input 
               type="text" 
-              [(ngModel)]="name" 
-              name="name" 
+              [(ngModel)]="title" 
+              name="title" 
               required
-              placeholder="Ej. Retratos & Studio, Expedición Andes..."
+              placeholder="Ej. Tokyo's Neon Pulse, The Crimson Sands of Wadi Rum..."
               class="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
             />
-            <p class="text-[11px] text-neutral-400 mt-1">
-              Este nombre se usará como categoría y pestaña de filtrado en la galería.
-            </p>
           </div>
 
+          <!-- Subtítulo / Tag -->
           <div>
             <label class="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">
-              Descripción (Opcional)
+              Subtítulo / Región
+            </label>
+            <input 
+              type="text" 
+              [(ngModel)]="subtitle" 
+              name="subtitle" 
+              placeholder="Ej. Tokyo, Japan · Jordanian Desert · Patagonia"
+              class="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
+            />
+          </div>
+
+          <!-- Descripción Narrativa -->
+          <div>
+            <label class="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">
+              Narrativa Visual / Descripción
             </label>
             <textarea 
               [(ngModel)]="description" 
               name="description" 
               rows="3"
-              placeholder="Breve reseña sobre las tomas o el concepto de esta colección..."
-              class="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
+              placeholder="Escribe la historia detrás de la serie, el concepto visual o las emociones capturadas..."
+              class="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition resize-none"
             ></textarea>
+          </div>
+
+          <!-- Foto de Portada -->
+          <div>
+            <label class="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">
+              Foto de Portada
+            </label>
+
+            <!-- Previsualización -->
+            @if (previewUrl) {
+              <div class="mb-3 relative rounded-lg overflow-hidden h-36 bg-neutral-100 border border-neutral-200">
+                <img [src]="previewUrl" alt="Previsualización" class="w-full h-full object-cover" />
+                <button 
+                  type="button" 
+                  (click)="clearPreview()"
+                  class="absolute top-2 right-2 bg-black/70 hover:bg-black text-white p-1 rounded-full transition text-xs"
+                  title="Eliminar imagen"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            }
+
+            <div class="space-y-2">
+              <input 
+                type="file" 
+                (change)="onFileSelected($event)" 
+                accept="image/*"
+                class="block w-full text-xs text-neutral-500 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-neutral-100 file:text-neutral-800 hover:file:bg-neutral-200 cursor-pointer"
+              />
+              <div class="flex items-center gap-2">
+                <span class="text-[11px] text-neutral-400">O pegar URL externa:</span>
+                <input 
+                  type="text" 
+                  [(ngModel)]="coverImageUrl" 
+                  (ngModelChange)="onUrlChange($event)"
+                  name="coverImageUrl" 
+                  placeholder="https://..."
+                  class="flex-1 px-2.5 py-1 text-xs rounded border border-neutral-200 focus:outline-none focus:border-black transition"
+                />
+              </div>
+            </div>
           </div>
 
           <!-- Actions -->
@@ -81,7 +138,7 @@ import { Album } from '../../models/album.model';
 
             <button 
               type="submit" 
-              [disabled]="loading() || !name.trim()"
+              [disabled]="loading() || !title.trim()"
               class="px-6 py-2.5 bg-black text-white text-sm font-semibold rounded-lg hover:bg-neutral-800 transition disabled:opacity-50 flex items-center gap-2"
             >
               @if (loading()) {
@@ -89,9 +146,9 @@ import { Album } from '../../models/album.model';
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span>Creando...</span>
+                <span>Guardando...</span>
               } @else {
-                <span>Crear Álbum</span>
+                <span>{{ albumToEdit ? 'Guardar Cambios' : 'Crear Álbum' }}</span>
               }
             </button>
           </div>
@@ -100,41 +157,163 @@ import { Album } from '../../models/album.model';
     </div>
   `
 })
-export class AlbumModalComponent {
+export class AlbumModalComponent implements OnInit {
+  @Input() albumToEdit?: Album | null = null;
   @Output() close = new EventEmitter<void>();
   @Output() saved = new EventEmitter<Album>();
 
   private readonly albumService = inject(AlbumService);
   private readonly toastService = inject(ToastService);
 
-  name = '';
+  title = '';
+  subtitle = '';
   description = '';
+  coverImageUrl = '';
+  selectedFile: File | null = null;
+  previewUrl: string | null = null;
+
   readonly loading = signal(false);
 
+  ngOnInit() {
+    if (this.albumToEdit) {
+      this.title = this.albumToEdit.title || this.albumToEdit.name || '';
+      this.subtitle = this.albumToEdit.subtitle || '';
+      this.description = this.albumToEdit.description || '';
+      this.coverImageUrl = this.albumToEdit.coverImageUrl || this.albumToEdit.coverImage || '';
+      if (this.coverImageUrl) {
+        this.previewUrl = this.albumService.getImageUrl(this.coverImageUrl);
+      }
+    }
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      this.selectedFile = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.previewUrl = e.target?.result as string;
+      };
+      reader.readAsDataURL(this.selectedFile);
+    }
+  }
+
+  onUrlChange(url: string) {
+    if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+      this.previewUrl = url;
+      this.selectedFile = null;
+    }
+  }
+
+  clearPreview() {
+    this.previewUrl = null;
+    this.selectedFile = null;
+    this.coverImageUrl = '';
+  }
+
   onSubmit() {
-    const trimmedName = this.name.trim();
-    if (!trimmedName) {
-      this.toastService.error('El nombre del álbum es obligatorio');
+    const trimmedTitle = this.title.trim();
+    if (!trimmedTitle) {
+      this.toastService.error('El título del álbum es obligatorio');
       return;
     }
 
     this.loading.set(true);
-    this.albumService.createAlbum({
-      name: trimmedName,
-      category: trimmedName,
-      description: this.description.trim()
-    }).subscribe({
-      next: (created) => {
-        this.loading.set(false);
-        this.toastService.success(`Álbum "${created.name}" creado con éxito`);
-        this.saved.emit(created);
-        this.close.emit();
-      },
-      error: (err) => {
-        this.loading.set(false);
-        console.error('Error al crear álbum', err);
-        this.toastService.error('No se pudo crear el álbum. Verifica tu conexión o permisos de administrador.');
+
+    if (this.albumToEdit) {
+      // Actualizar álbum existente
+      if (this.selectedFile) {
+        const formData = new FormData();
+        formData.append('title', trimmedTitle);
+        formData.append('name', trimmedTitle);
+        if (this.subtitle.trim()) formData.append('subtitle', this.subtitle.trim());
+        if (this.description.trim()) formData.append('description', this.description.trim());
+        formData.append('file', this.selectedFile);
+
+        this.albumService.updateAlbumMultipart(this.albumToEdit.id, formData).subscribe({
+          next: (updated) => {
+            this.loading.set(false);
+            this.toastService.success(`Álbum "${updated.name}" actualizado`);
+            this.saved.emit(updated);
+            this.close.emit();
+          },
+          error: (err) => {
+            this.loading.set(false);
+            console.error(err);
+            this.toastService.error('Error al actualizar el álbum');
+          }
+        });
+      } else {
+        const dto: Partial<Album> = {
+          title: trimmedTitle,
+          name: trimmedTitle,
+          subtitle: this.subtitle.trim() || undefined,
+          description: this.description.trim() || undefined,
+          coverImageUrl: this.coverImageUrl.trim() || undefined,
+          coverImage: this.coverImageUrl.trim() || undefined
+        };
+
+        this.albumService.updateAlbum(this.albumToEdit.id, dto).subscribe({
+          next: (updated) => {
+            this.loading.set(false);
+            this.toastService.success(`Álbum "${updated.name}" actualizado`);
+            this.saved.emit(updated);
+            this.close.emit();
+          },
+          error: (err) => {
+            this.loading.set(false);
+            console.error(err);
+            this.toastService.error('Error al actualizar el álbum');
+          }
+        });
       }
-    });
+    } else {
+      // Crear nuevo álbum
+      if (this.selectedFile) {
+        const formData = new FormData();
+        formData.append('title', trimmedTitle);
+        formData.append('name', trimmedTitle);
+        if (this.subtitle.trim()) formData.append('subtitle', this.subtitle.trim());
+        if (this.description.trim()) formData.append('description', this.description.trim());
+        formData.append('file', this.selectedFile);
+
+        this.albumService.createAlbumMultipart(formData).subscribe({
+          next: (created) => {
+            this.loading.set(false);
+            this.toastService.success(`Álbum "${created.name}" creado con éxito`);
+            this.saved.emit(created);
+            this.close.emit();
+          },
+          error: (err) => {
+            this.loading.set(false);
+            console.error(err);
+            this.toastService.error('Error al crear el álbum');
+          }
+        });
+      } else {
+        const dto: Partial<Album> = {
+          title: trimmedTitle,
+          name: trimmedTitle,
+          subtitle: this.subtitle.trim() || undefined,
+          description: this.description.trim() || undefined,
+          coverImageUrl: this.coverImageUrl.trim() || undefined,
+          coverImage: this.coverImageUrl.trim() || undefined
+        };
+
+        this.albumService.createAlbum(dto).subscribe({
+          next: (created) => {
+            this.loading.set(false);
+            this.toastService.success(`Álbum "${created.name}" creado con éxito`);
+            this.saved.emit(created);
+            this.close.emit();
+          },
+          error: (err) => {
+            this.loading.set(false);
+            console.error(err);
+            this.toastService.error('Error al crear el álbum');
+          }
+        });
+      }
+    }
   }
 }
