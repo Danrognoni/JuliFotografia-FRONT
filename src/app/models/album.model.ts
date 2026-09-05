@@ -6,6 +6,11 @@ export interface AlbumPhoto {
   orientation?: 'portrait' | 'landscape' | 'square';
   displayOrder?: number;
   order?: number;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  zIndex?: number;
   createdAt?: string;
 }
 
@@ -20,6 +25,10 @@ export interface Album {
   coverImageUrl?: string;
   displayOrder?: number;
   order?: number;
+  xPos?: number;
+  yPos?: number;
+  width?: number;
+  zIndex?: number;
   photos?: AlbumPhoto[];
   photoUrls?: string[];
   count?: number;

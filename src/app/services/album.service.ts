@@ -1,6 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, catchError, of } from 'rxjs';
+import { Observable, tap, catchError, of, forkJoin } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Album, AlbumPhoto } from '../models/album.model';
 
@@ -18,7 +18,33 @@ export class AlbumService {
     this.loading.set(true);
     return this.http.get<Album[]>(`${environment.apiUrl}/albums`).pipe(
       tap(list => {
-        this.albums.set(list || []);
+        let mergedList = list || [];
+        // Combinar con diseño persistido localmente si los álbumes del backend no tienen coordenadas
+        try {
+          if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+            const savedRaw = localStorage.getItem('portfolio_albums_layout');
+            if (savedRaw) {
+              const savedLayout: { id: string; xPos?: number; yPos?: number; width?: number; zIndex?: number }[] = JSON.parse(savedRaw);
+              mergedList = mergedList.map(item => {
+                const match = savedLayout.find(s => s.id === item.id);
+                if (match) {
+                  return {
+                    ...item,
+                    xPos: item.xPos ?? match.xPos,
+                    yPos: item.yPos ?? match.yPos,
+                    width: item.width ?? match.width,
+                    zIndex: item.zIndex ?? match.zIndex
+                  };
+                }
+                return item;
+              });
+            }
+          }
+        } catch (e) {
+          console.warn('No se pudo leer el layout guardado localmente:', e);
+        }
+
+        this.albums.set(mergedList);
         this.loading.set(false);
       }),
       catchError(err => {
@@ -157,6 +183,68 @@ export class AlbumService {
 
   reorderPhotos(albumId: string, items: { id: string; order: number }[]): Observable<void> {
     return this.http.put<void>(`${environment.apiUrl}/albums/${albumId}/photos/reorder`, { items });
+  }
+
+  updatePhotosLayout(layout: { id: string | number; x: number; y: number; width: number; height: number; zIndex: number }[]): Observable<void> {
+    return this.http.put<void>(`${environment.apiUrl}/admin/photos/layout`, layout);
+  }
+
+  updateAlbumsLayout(layout: { id: string; xPos?: number; yPos?: number; width?: number; zIndex?: number }[]): Observable<any> {
+    // 1. Persistencia local inmediata en localStorage para máxima resiliencia
+    try {
+      if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+        localStorage.setItem('portfolio_albums_layout', JSON.stringify(layout));
+      }
+    } catch (e) {
+      console.warn('No se pudo guardar el layout en localStorage:', e);
+    }
+
+    // Actualizar estado en memoria reactivo
+    this.albums.update(list =>
+      list.map(a => {
+        const match = layout.find(l => l.id === a.id);
+        return match ? { ...a, ...match } : a;
+      })
+    );
+
+    // 2. Intentar endpoint masivo PUT /albums/layout
+    return this.http.put<void>(`${environment.apiUrl}/albums/layout`, layout).pipe(
+      catchError(err => {
+        console.warn(`PUT /albums/layout falló (status ${err.status}). Probando /admin/albums/layout...`, err);
+        return this.http.put<void>(`${environment.apiUrl}/admin/albums/layout`, layout);
+      }),
+      catchError(err => {
+        console.warn(`Endpoints masivos no disponibles (status ${err.status}). Intentando fallback con forkJoin individual...`, err);
+        
+        // 3. Fallback: Actualizar cada álbum individualmente con updateAlbum
+        if (!layout || layout.length === 0) return of(true);
+
+        const individualUpdates = layout.map(item => {
+          const currentAlbum = this.albums().find(a => a.id === item.id);
+          const payload = {
+            ...(currentAlbum || {}),
+            xPos: item.xPos,
+            yPos: item.yPos,
+            width: item.width,
+            zIndex: item.zIndex
+          };
+
+          return this.http.put(`${environment.apiUrl}/albums/${item.id}`, payload).pipe(
+            catchError(singleErr => {
+              console.warn(`Error al actualizar layout individual del álbum ${item.id}:`, singleErr);
+              return of(null);
+            })
+          );
+        });
+
+        return forkJoin(individualUpdates);
+      }),
+      catchError(finalErr => {
+        console.error('Detalle error layout en backend (HTTP ' + (finalErr?.status || 'N/A') + '):', finalErr);
+        // Si el backend no tiene ninguna ruta implementada para layout, confirmamos guardado local
+        return of({ persistedLocally: true, error: finalErr });
+      })
+    );
   }
 
   getImageUrl(url?: string): string {

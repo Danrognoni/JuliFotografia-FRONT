@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, HostListener } from '@angular/core';
+import { Component, OnInit, inject, signal, computed, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -8,11 +8,13 @@ import { ToastService } from '../../services/toast.service';
 import { SiteContentService } from '../../services/site-content.service';
 import { Album, AlbumPhoto } from '../../models/album.model';
 import { AlbumModalComponent } from '../../components/album-modal/album-modal.component';
+import { PhotoCanvasComponent } from '../../components/photo-canvas/photo-canvas.component';
+import { CanvasPhoto, PhotoLayoutPayload } from '../../models/canvas-photo.model';
 
 @Component({
   selector: 'app-album-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, AlbumModalComponent],
+  imports: [CommonModule, RouterModule, FormsModule, AlbumModalComponent, PhotoCanvasComponent],
   template: `
     <div class="min-h-screen bg-[#faf6e8] text-neutral-900 select-none pb-24 md:pb-36 selection:bg-[#feea68] selection:text-black">
       
@@ -160,93 +162,14 @@ import { AlbumModalComponent } from '../../components/album-modal/album-modal.co
               }
             </div>
           } @else {
-            
-            <!-- Asymmetric Editorial 2-Column Grid (Dennis Wanderlight Composition) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-start">
-              
-              <!-- LEFT COLUMN -->
-              <div class="flex flex-col space-y-8 sm:space-y-12 lg:space-y-16">
-                @for (photo of leftColumnPhotos(); track photo.id; let idx = $index) {
-                  <div class="group relative cursor-pointer" (click)="openLightboxForPhoto(photo)">
-                    <div 
-                      class="overflow-hidden rounded-none shadow-lg bg-neutral-900 relative"
-                      [ngClass]="photo.orientation === 'portrait' ? 'aspect-[4/5]' : 'aspect-[16/10]'"
-                    >
-                      <img 
-                        [src]="albumService.getImageUrl(photo.imageUrl)" 
-                        [alt]="photo.caption || album()!.name"
-                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                        loading="lazy"
-                      />
-                      <div class="absolute inset-0 bg-black/5 group-hover:bg-black/20 transition-colors duration-300"></div>
-                    </div>
-
-                    @if (photo.caption) {
-                      <div class="mt-2.5 text-xs text-neutral-600 italic">
-                        {{ photo.caption }}
-                      </div>
-                    }
-
-                    <!-- Admin Photo Controls -->
-                    @if (authService.isAdmin()) {
-                      <div class="absolute top-3 right-3 z-30 flex items-center gap-1 opacity-90 group-hover:opacity-100 transition">
-                        <button 
-                          (click)="deletePhoto(photo.id, $event)"
-                          class="p-2 bg-white/95 hover:bg-rose-600 hover:text-white text-neutral-900 rounded-full shadow hover:scale-110 transition"
-                          title="Eliminar foto del álbum"
-                        >
-                          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
-                    }
-                  </div>
-                }
-              </div>
-
-              <!-- RIGHT COLUMN (SLIGHTLY OFFSET DOWNWARDS FOR EDITORIAL RHYTHM) -->
-              <div class="flex flex-col space-y-8 sm:space-y-12 lg:space-y-16 md:pt-16">
-                @for (photo of rightColumnPhotos(); track photo.id; let idx = $index) {
-                  <div class="group relative cursor-pointer" (click)="openLightboxForPhoto(photo)">
-                    <div 
-                      class="overflow-hidden rounded-none shadow-lg bg-neutral-900 relative"
-                      [ngClass]="photo.orientation === 'portrait' ? 'aspect-[4/5]' : 'aspect-[16/10]'"
-                    >
-                      <img 
-                        [src]="albumService.getImageUrl(photo.imageUrl)" 
-                        [alt]="photo.caption || album()!.name"
-                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                        loading="lazy"
-                      />
-                      <div class="absolute inset-0 bg-black/5 group-hover:bg-black/20 transition-colors duration-300"></div>
-                    </div>
-
-                    @if (photo.caption) {
-                      <div class="mt-2.5 text-xs text-neutral-600 italic">
-                        {{ photo.caption }}
-                      </div>
-                    }
-
-                    <!-- Admin Photo Controls -->
-                    @if (authService.isAdmin()) {
-                      <div class="absolute top-3 right-3 z-30 flex items-center gap-1 opacity-90 group-hover:opacity-100 transition">
-                        <button 
-                          (click)="deletePhoto(photo.id, $event)"
-                          class="p-2 bg-white/95 hover:bg-rose-600 hover:text-white text-neutral-900 rounded-full shadow hover:scale-110 transition"
-                          title="Eliminar foto del álbum"
-                        >
-                          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
-                    }
-                  </div>
-                }
-              </div>
-
-            </div>
+            <!-- FREE-FORM EDITORIAL PHOTO CANVAS -->
+            <app-photo-canvas
+              #photoCanvas
+              [photos]="canvasPhotos()"
+              [allowAdminToggle]="authService.isAdmin()"
+              (photoClick)="openLightboxForCanvasPhoto($event)"
+              (saveLayout)="saveCanvasLayout($event)"
+            />
           }
 
         }
@@ -491,14 +414,65 @@ export class AlbumDetailComponent implements OnInit {
     this.router.navigate(['/'], { fragment: 'portfolio' });
   }
 
-  leftColumnPhotos(): AlbumPhoto[] {
+  @ViewChild('photoCanvas') photoCanvasComponent?: PhotoCanvasComponent;
+
+  readonly canvasPhotos = computed<CanvasPhoto[]>(() => {
+    const currentAlbum = this.album();
+    if (!currentAlbum || !currentAlbum.photos) return [];
+    return currentAlbum.photos.map((p, idx) => ({
+      id: p.id,
+      url: this.albumService.getImageUrl(p.imageUrl),
+      title: p.caption,
+      caption: p.caption,
+      x: p.x || 0,
+      y: p.y || 0,
+      width: p.width || (p.orientation === 'portrait' ? 400 : 520),
+      height: p.height || (p.orientation === 'portrait' ? 540 : 360),
+      zIndex: p.zIndex || (idx + 1),
+      orientation: p.orientation
+    }));
+  });
+
+  openLightboxForCanvasPhoto(canvasPhoto: CanvasPhoto) {
     const photos = this.album()?.photos || [];
-    return photos.filter((_, idx) => idx % 2 === 0);
+    const index = photos.findIndex(p => p.id === canvasPhoto.id);
+    if (index !== -1) {
+      this.activeLightboxIndex.set(index);
+    }
   }
 
-  rightColumnPhotos(): AlbumPhoto[] {
-    const photos = this.album()?.photos || [];
-    return photos.filter((_, idx) => idx % 2 === 1);
+  saveCanvasLayout(payload: PhotoLayoutPayload[]) {
+    const currentAlbum = this.album();
+    if (!currentAlbum) return;
+
+    this.albumService.updatePhotosLayout(payload).subscribe({
+      next: () => {
+        this.toastService.show('Diseño del lienzo guardado exitosamente', 'success');
+        this.photoCanvasComponent?.notifySaveSuccess();
+        this.album.update(alb => {
+          if (!alb || !alb.photos) return alb;
+          const updatedPhotos: AlbumPhoto[] = alb.photos.map(p => {
+            const match = payload.find(item => String(item.id) === String(p.id));
+            return match
+              ? {
+                  ...p,
+                  x: match.x,
+                  y: match.y,
+                  width: match.width,
+                  height: match.height,
+                  zIndex: match.zIndex
+                }
+              : p;
+          });
+          return { ...alb, photos: updatedPhotos };
+        });
+      },
+      error: (err) => {
+        console.error('Error al guardar layout del lienzo', err);
+        this.toastService.show('Error al guardar el diseño. Se restauraron los cambios.', 'error');
+        this.photoCanvasComponent?.notifySaveError();
+      }
+    });
   }
 
   openLightboxForPhoto(photo: AlbumPhoto) {

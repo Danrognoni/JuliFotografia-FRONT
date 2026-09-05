@@ -66,6 +66,10 @@ export class PhotoService {
     );
   }
 
+  updatePhotosLayout(layout: { id: string | number; x: number; y: number; width: number; height: number; zIndex: number }[]): Observable<void> {
+    return this.http.put<void>(`${environment.apiUrl}/admin/photos/layout`, layout);
+  }
+
   getImageUrl(url?: string): string {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://')) {
