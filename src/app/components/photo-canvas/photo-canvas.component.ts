@@ -103,27 +103,57 @@ import {
           </div>
         }
 
-        <!-- PHOTOS LIST (ABSOLUTELY POSITIONED) -->
-        @for (photo of photosList(); track photo.id) {
-          <div
-            cdkDrag
-            cdkDragBoundary=".canvas-container"
-            [cdkDragDisabled]="!isEditMode() || isResizing() || isRotating()"
-            [cdkDragFreeDragPosition]="{ x: photo.x, y: photo.y }"
-            (cdkDragStarted)="onDragStarted(photo)"
-            (cdkDragEnded)="onDragEnded(photo, $event)"
-            (click)="onPhotoClick(photo, $event)"
-            class="canvas-photo-item absolute left-0 top-0 select-none group will-change-transform"
-            [ngClass]="{
-              'cursor-grab active:cursor-grabbing': isEditMode() && !isResizing() && !isRotating(),
-              'cursor-pointer': !isEditMode(),
-              'shadow-2xl': isEditMode() && selectedPhotoId() === photo.id,
-              'hover:ring-1 hover:ring-black/30': isEditMode() && selectedPhotoId() !== photo.id
-            }"
-            [style.width.px]="photo.width"
-            [style.height.px]="photo.height"
-            [style.zIndex]="photo.zIndex"
-          >
+        <!-- VISTA MÓVIL RESPONSIVE EN VISTA NORMAL (Pantallas < 640px) -->
+        @if (!isEditMode()) {
+          <div class="sm:hidden block p-3 space-y-6">
+            @for (photo of photosList(); track photo.id; let idx = $index) {
+              <div 
+                (click)="onPhotoClick(photo, $event)"
+                class="relative bg-white rounded-xl shadow-sm border border-neutral-200/80 overflow-hidden cursor-pointer active:scale-[0.99] transition duration-200"
+              >
+                <div class="aspect-[4/3] w-full overflow-hidden bg-neutral-100 relative">
+                  <img
+                    [src]="photo.url"
+                    [alt]="photo.title || photo.caption || 'Fotografía'"
+                    class="w-full h-full object-cover select-none"
+                    loading="lazy"
+                  />
+                </div>
+                @if (photo.caption || photo.title) {
+                  <div class="p-3 bg-white border-t border-neutral-100 flex items-center justify-between">
+                    <span class="inline-block bg-[#feea68] px-2 py-0.5 text-[11px] font-semibold text-neutral-900 tracking-tight shadow-sm rounded-sm">
+                      {{ photo.caption || photo.title }}
+                    </span>
+                    <span class="text-[10px] text-neutral-400 font-mono font-medium uppercase">Ver en grande</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- PHOTOS LIST (ABSOLUTELY POSITIONED: Desktop o Modo Edición) -->
+        <div [ngClass]="{ 'hidden sm:block': !isEditMode(), 'block': isEditMode() }">
+          @for (photo of photosList(); track photo.id) {
+            <div
+              cdkDrag
+              cdkDragBoundary=".canvas-container"
+              [cdkDragDisabled]="!isEditMode() || isResizing() || isRotating()"
+              [cdkDragFreeDragPosition]="{ x: photo.x, y: photo.y }"
+              (cdkDragStarted)="onDragStarted(photo)"
+              (cdkDragEnded)="onDragEnded(photo, $event)"
+              (click)="onPhotoClick(photo, $event)"
+              class="canvas-photo-item absolute left-0 top-0 select-none group will-change-transform"
+              [ngClass]="{
+                'cursor-grab active:cursor-grabbing touch-none': isEditMode() && !isResizing() && !isRotating(),
+                'cursor-pointer': !isEditMode(),
+                'shadow-2xl': isEditMode() && selectedPhotoId() === photo.id,
+                'hover:ring-1 hover:ring-black/30': isEditMode() && selectedPhotoId() !== photo.id
+              }"
+              [style.width.px]="photo.width"
+              [style.height.px]="photo.height"
+              [style.zIndex]="photo.zIndex"
+            >
             <!-- ROTATED CONTAINER (ISOLATES ROTATION MATRIX FROM CDK DRAG POSITION) -->
             <div 
               class="w-full h-full relative"

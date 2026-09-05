@@ -55,7 +55,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
           [revealDelay]="220"
           class="order-1 md:order-2 flex flex-col items-center"
         >
-          <div class="relative w-72 sm:w-80 md:w-96 rounded-none shadow-2xl overflow-hidden bg-neutral-900 group">
+          <div class="relative w-full max-w-[280px] sm:max-w-xs md:w-96 rounded-none shadow-2xl overflow-hidden bg-neutral-900 group">
             <!-- Portrait of Dennis -->
             <div class="aspect-[4/5] overflow-hidden">
               <img 
@@ -68,7 +68,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
             <!-- "My Story" Pill Bar at the bottom of the card -->
             <a 
               href="#about"
-              class="w-full bg-white text-neutral-900 px-5 py-3 flex items-center justify-between hover:bg-neutral-100 transition duration-200"
+              class="w-full bg-white text-neutral-900 px-5 py-3 min-h-[44px] flex items-center justify-between hover:bg-neutral-100 transition duration-200 active:bg-neutral-200"
             >
               <span class="text-sm font-semibold tracking-wide">
                 {{ siteContentService.content().storyButtonText || 'My Story' }}

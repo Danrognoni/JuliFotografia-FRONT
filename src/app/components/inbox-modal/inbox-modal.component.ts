@@ -11,7 +11,7 @@ import { ContactMessage } from '../../models/contact.model';
   template: `
     <div class="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
       <div 
-        class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-6 md:p-8 border border-neutral-200 relative overflow-hidden max-h-[85vh] flex flex-col"
+        class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-5 sm:p-7 md:p-8 border border-neutral-200 relative overflow-hidden max-h-[85vh] flex flex-col"
         (click)="$event.stopPropagation()"
       >
         <!-- Header -->
@@ -59,7 +59,7 @@ import { ContactMessage } from '../../models/contact.model';
                 class="p-4 rounded-xl border transition relative"
                 [ngClass]="msg.read ? 'bg-neutral-50/60 border-neutral-200 text-neutral-700' : 'bg-white border-black/20 shadow-sm text-neutral-900'"
               >
-                <div class="flex items-start justify-between gap-4 mb-2">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 mb-2">
                   <div>
                     <div class="flex items-center gap-2">
                       <span class="font-bold text-sm">{{ msg.name }}</span>

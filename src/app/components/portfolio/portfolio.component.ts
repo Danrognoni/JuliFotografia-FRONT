@@ -30,29 +30,29 @@ import {
 @Component({
   selector: 'app-portfolio',
   standalone: true,
-  imports: [CommonModule, DragDropModule, AlbumModalComponent, CdkDragHandle],
+  imports: [CommonModule, DragDropModule, AlbumModalComponent],
   template: `
-    <section id="portfolio" class="w-full py-20 sm:py-28 md:py-36 bg-[#edf3f8] text-neutral-900 relative overflow-hidden">
+    <section id="portfolio" class="w-full py-16 sm:py-24 md:py-36 bg-[#edf3f8] text-neutral-900 relative overflow-hidden overflow-x-hidden">
       <!-- Contenedor al 100% del ancho con padding adaptativo -->
-      <div class="w-full px-4 sm:px-8 lg:px-12">
+      <div class="w-full px-3 sm:px-6 lg:px-12 max-w-full overflow-x-hidden">
         
         <!-- Header & Admin Toolbar -->
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10 md:mb-16 max-w-7xl mx-auto">
-          <div class="flex flex-wrap items-center justify-center gap-3 text-center">
-  <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-neutral-900 uppercase">
-  Portfolio & Expediciones
-</h1>
-    @if (isEditLayoutMode()) {
-      <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
-        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-        Modo Edición Canvas
-      </span>
-    }
-  </div>
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 sm:mb-12 md:mb-16 max-w-7xl mx-auto">
+          <div class="flex flex-wrap items-center justify-start sm:justify-center gap-2.5 text-left sm:text-center">
+            <h1 class="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-neutral-900 uppercase">
+              Portfolio & Expediciones
+            </h1>
+            @if (isEditLayoutMode()) {
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                Modo Edición Canvas
+              </span>
+            }
+          </div>
 
           <!-- Admin Quick Action Toolbar -->
           @if (authService.isAdmin()) {
-            <div class="flex items-center flex-wrap gap-2.5">
+            <div class="flex items-center flex-wrap gap-2 w-full sm:w-auto">
               
               <!-- Botón Guardar Layout (Activo si hay cambios pendientes en modo edición) -->
               @if (isEditLayoutMode()) {
@@ -60,7 +60,7 @@ import {
                   type="button"
                   (click)="saveLayout()"
                   [disabled]="!pendingChanges() || savingLayout()"
-                  class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-300 text-white text-xs font-bold rounded-lg shadow-sm transition disabled:cursor-not-allowed"
+                  class="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 min-h-[42px] bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-300 text-white text-xs font-bold rounded-xl shadow-sm transition disabled:cursor-not-allowed"
                   title="Guardar diseño del lienzo"
                 >
                   @if (savingLayout()) {
@@ -84,13 +84,13 @@ import {
                 <button 
                   type="button"
                   (click)="autoArrangeCollage()"
-                  class="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-semibold rounded-lg border border-neutral-300 shadow-sm transition"
+                  class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[42px] bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-semibold rounded-xl border border-neutral-300 shadow-sm transition"
                   title="Distribuir automáticamente en collage asimétrico"
                 >
                   <svg class="w-3.5 h-3.5 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                   </svg>
-                  <span class="hidden sm:inline">Auto Collage</span>
+                  <span class="inline">Auto Collage</span>
                 </button>
               }
 
@@ -98,7 +98,7 @@ import {
               <button 
                 type="button"
                 (click)="toggleEditLayoutMode()"
-                class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-lg border transition shadow-sm"
+                class="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 min-h-[42px] text-xs font-bold rounded-xl border transition shadow-sm"
                 [ngClass]="isEditLayoutMode() 
                   ? 'bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100' 
                   : 'bg-white hover:bg-neutral-50 text-neutral-800 border-neutral-300'"
@@ -121,7 +121,7 @@ import {
                 <button 
                   type="button"
                   (click)="openCreateAlbumModal()"
-                  class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-neutral-50 text-neutral-900 text-xs font-bold rounded-lg border border-neutral-300 shadow-sm transition hover:shadow"
+                  class="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 min-h-[42px] bg-white hover:bg-neutral-50 text-neutral-900 text-xs font-bold rounded-xl border border-neutral-300 shadow-sm transition hover:shadow"
                 >
                   <svg class="w-4 h-4 text-neutral-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -137,10 +137,10 @@ import {
         <!-- FREE-FORM CANVAS (LIENZO DE DISEÑO LIBRE) -->
         <div 
           #canvasContainer
-          class="relative w-full transition-all duration-300 select-none pb-24"
+          class="relative w-full transition-all duration-300 select-none pb-24 max-w-full overflow-x-hidden"
           [style.minHeight.px]="dynamicMinHeight()"
           [ngClass]="{
-            'border-2 border-dashed border-amber-400/80 bg-amber-500/[0.02] rounded-3xl p-4 shadow-inner': isEditLayoutMode(),
+            'border-2 border-dashed border-amber-400/80 bg-amber-500/[0.02] rounded-3xl p-2 sm:p-4 shadow-inner': isEditLayoutMode(),
             'border border-transparent': !isEditLayoutMode()
           }"
         >
@@ -200,7 +200,7 @@ import {
               @if (isEditLayoutMode()) {
                 <div 
                   cdkDragHandle
-                  class="cursor-grab active:cursor-grabbing absolute -top-8 left-0 right-0 h-7 bg-neutral-900/95 text-white rounded-t-lg flex items-center justify-between px-2.5 shadow-md z-30 select-none backdrop-blur-sm transition hover:bg-neutral-900"
+                  class="cursor-grab active:cursor-grabbing absolute -top-8 left-0 right-0 h-7 bg-neutral-900/95 text-white rounded-t-lg flex items-center justify-between px-2.5 shadow-md z-30 select-none backdrop-blur-sm transition hover:bg-neutral-900 touch-none"
                   title="Arrastrar para mover foto"
                 >
                   <div class="flex items-center gap-1.5 text-[10px] font-mono font-medium text-neutral-300 pointer-events-none">
@@ -223,10 +223,10 @@ import {
               >
                 <!-- Contenedor de la Imagen -->
                 <div 
-                  cdkDragHandle
+                  [attr.cdkDragHandle]="isEditLayoutMode() ? '' : null"
                   class="relative w-full h-full bg-neutral-100 transition-all duration-200"
                   [ngClass]="{
-                    'overflow-hidden ring-2 ring-amber-500 ring-offset-2 ring-offset-[#edf3f8] shadow-2xl rounded-sm cursor-grab active:cursor-grabbing': isEditLayoutMode(),
+                    'overflow-hidden ring-2 ring-amber-500 ring-offset-2 ring-offset-[#edf3f8] shadow-2xl rounded-sm cursor-grab active:cursor-grabbing touch-none': isEditLayoutMode(),
                     'overflow-hidden shadow-sm hover:shadow-lg': !isEditLayoutMode(),
                     'aspect-[4/3]': !album.height && (isEditLayoutMode() || i % 5 === 2),
                     'aspect-[16/10]': !album.height && !isEditLayoutMode() && i % 5 === 0,

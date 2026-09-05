@@ -47,7 +47,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
         <h1 
           appScrollReveal="fade-up"
           [revealDelay]="60"
-          class="text-white font-extralight tracking-widest sm:tracking-[0.18em] uppercase text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem] leading-tight drop-shadow-[0_2px_14px_rgba(0,0,0,0.85)] select-none max-w-5xl mx-auto break-words"
+          class="text-white font-extralight tracking-widest sm:tracking-[0.18em] uppercase text-3xl sm:text-5xl md:text-7xl lg:text-[5.5rem] leading-tight drop-shadow-[0_2px_14px_rgba(0,0,0,0.85)] select-none max-w-5xl mx-auto break-words"
         >
           {{ siteContentService.content().heroTitle || 'The World, Unfiltered' }}
         </h1>

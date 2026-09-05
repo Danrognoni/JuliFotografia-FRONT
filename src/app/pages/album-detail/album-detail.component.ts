@@ -16,7 +16,7 @@ import { CanvasPhoto, PhotoLayoutPayload } from '../../models/canvas-photo.model
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule, AlbumModalComponent, PhotoCanvasComponent],
   template: `
-    <div class="min-h-screen bg-[#faf6e8] text-neutral-900 select-none pb-24 md:pb-36 selection:bg-[#feea68] selection:text-black">
+    <div class="min-h-screen bg-[#faf6e8] text-neutral-900 select-none pb-24 md:pb-36 selection:bg-[#feea68] selection:text-black overflow-x-hidden max-w-full">
       
       <!-- TOP NAVIGATION BAR (MATCHING SCREENSHOT 2 DENNIS WANDERLIGHT) -->
       <header class="w-full border-b border-black/5 bg-[#faf6e8]/90 backdrop-blur-md sticky top-0 z-40 transition">

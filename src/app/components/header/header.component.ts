@@ -122,21 +122,38 @@ import { AuthService } from '../../services/auth.service';
         <!-- Mobile Menu Trigger -->
         <div class="pointer-events-auto md:hidden flex items-center gap-2">
           <button 
+            type="button"
             (click)="toggleLogin.emit()"
-            class="p-2 backdrop-blur-md bg-black/25 rounded-xl border border-white/15 text-white/90 shadow-md"
+            class="min-w-[44px] min-h-[44px] flex items-center justify-center backdrop-blur-md bg-black/35 rounded-xl border border-white/20 text-white/90 shadow-md active:scale-95 transition"
+            [title]="authService.isAdmin() ? 'Panel Admin Activo' : 'Acceso Administrador'"
+            aria-label="Acceso Administrador"
           >
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
+            @if (authService.isAdmin()) {
+              <svg class="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C9.243 2 7 4.243 7 7v3H6c-1.103 0-2 .897-2 2v8c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2v-8c0-1.103-.897-2-2-2h-1V7c0-2.757-2.243-5-5-5zm-3 7V7c0-1.654 1.346-3 3-3s3 1.346 3 3v2H9z" />
+              </svg>
+            } @else {
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            }
           </button>
           <button 
+            type="button"
             (click)="mobileMenuOpen = !mobileMenuOpen"
-            class="p-2 backdrop-blur-md bg-black/25 rounded-xl border border-white/15 text-white shadow-md"
-            aria-label="Abrir menú"
+            class="min-w-[44px] min-h-[44px] flex items-center justify-center backdrop-blur-md bg-black/35 rounded-xl border border-white/20 text-white shadow-md active:scale-95 transition"
+            [attr.aria-expanded]="mobileMenuOpen"
+            aria-label="Abrir menú de navegación"
           >
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
-            </svg>
+            @if (mobileMenuOpen) {
+              <svg class="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            } @else {
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+              </svg>
+            }
           </button>
         </div>
       </div>
@@ -144,41 +161,46 @@ import { AuthService } from '../../services/auth.service';
       <!-- Mobile Dropdown Menu -->
       @if (mobileMenuOpen) {
         <div class="pointer-events-auto md:hidden px-4 pb-4 animate-fadeIn">
-          <div class="backdrop-blur-xl bg-neutral-900/95 rounded-2xl border border-white/15 p-5 shadow-2xl flex flex-col gap-3 text-white">
+          <div class="backdrop-blur-xl bg-neutral-950/95 rounded-2xl border border-white/15 p-4 shadow-2xl flex flex-col gap-1 text-white">
             <a 
               (click)="mobileMenuOpen = false" 
               href="#home" 
-              class="text-sm font-medium tracking-wide text-neutral-200 hover:text-white py-1.5 border-b border-white/10"
+              class="text-xs font-semibold tracking-widest uppercase text-neutral-200 hover:text-white px-3 py-3 min-h-[44px] flex items-center justify-between border-b border-white/10 active:bg-white/10 rounded-lg transition"
             >
-              {{ siteContentService.content().menuHome || 'Home' }}
+              <span>{{ siteContentService.content().menuHome || 'Home' }}</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400/80"></span>
             </a>
             <a 
               (click)="mobileMenuOpen = false" 
               href="#portfolio" 
-              class="text-sm font-medium tracking-wide text-neutral-200 hover:text-white py-1.5 border-b border-white/10"
+              class="text-xs font-semibold tracking-widest uppercase text-neutral-200 hover:text-white px-3 py-3 min-h-[44px] flex items-center justify-between border-b border-white/10 active:bg-white/10 rounded-lg transition"
             >
-              {{ siteContentService.content().menuPortfolio || 'Portfolio' }}
+              <span>{{ siteContentService.content().menuPortfolio || 'Portfolio' }}</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400/80"></span>
             </a>
             <a 
               (click)="mobileMenuOpen = false" 
               href="#about" 
-              class="text-sm font-medium tracking-wide text-neutral-200 hover:text-white py-1.5 border-b border-white/10"
+              class="text-xs font-semibold tracking-widest uppercase text-neutral-200 hover:text-white px-3 py-3 min-h-[44px] flex items-center justify-between border-b border-white/10 active:bg-white/10 rounded-lg transition"
             >
-              {{ siteContentService.content().menuAbout || 'About' }}
+              <span>{{ siteContentService.content().menuAbout || 'About' }}</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400/80"></span>
             </a>
             <a 
               (click)="mobileMenuOpen = false" 
               href="#faq" 
-              class="text-sm font-medium tracking-wide text-neutral-200 hover:text-white py-1.5 border-b border-white/10"
+              class="text-xs font-semibold tracking-widest uppercase text-neutral-200 hover:text-white px-3 py-3 min-h-[44px] flex items-center justify-between border-b border-white/10 active:bg-white/10 rounded-lg transition"
             >
-              FAQ
+              <span>FAQ</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400/80"></span>
             </a>
             <a 
               (click)="mobileMenuOpen = false" 
               href="#contact" 
-              class="text-sm font-medium tracking-wide text-neutral-200 hover:text-white py-1.5"
+              class="text-xs font-semibold tracking-widest uppercase text-neutral-200 hover:text-white px-3 py-3 min-h-[44px] flex items-center justify-between active:bg-white/10 rounded-lg transition"
             >
-              {{ siteContentService.content().menuContact || 'Contact' }}
+              <span>{{ siteContentService.content().menuContact || 'Contact' }}</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400/80"></span>
             </a>
           </div>
         </div>

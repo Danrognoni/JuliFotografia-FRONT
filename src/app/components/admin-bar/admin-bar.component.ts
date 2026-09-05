@@ -17,11 +17,14 @@ import { ToastService } from '../../services/toast.service';
               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
             </span>
-            <span class="font-semibold tracking-wide uppercase text-[11px] text-neutral-200">
+            <span class="font-semibold tracking-wide uppercase text-[11px] text-neutral-200 hidden sm:inline">
               CMS Modo Edición In-Situ Activado
             </span>
-            <span class="hidden sm:inline-block text-neutral-500">|</span>
-            <span class="hidden sm:inline-block text-neutral-400 font-mono text-[11px]">
+            <span class="font-semibold tracking-wide uppercase text-[11px] text-neutral-200 inline sm:hidden">
+              Admin CMS
+            </span>
+            <span class="hidden md:inline-block text-neutral-500">|</span>
+            <span class="hidden md:inline-block text-neutral-400 font-mono text-[11px]">
               {{ authService.currentUser()?.email }}
             </span>
           </div>

@@ -19,7 +19,7 @@ export interface EditFieldConfig {
   template: `
     <div class="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
       <div 
-        class="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 md:p-8 border border-neutral-200 relative overflow-hidden max-h-[90vh] flex flex-col"
+        class="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-5 sm:p-7 md:p-8 border border-neutral-200 relative overflow-hidden max-h-[90vh] flex flex-col"
         (click)="$event.stopPropagation()"
       >
         <!-- Header -->
@@ -98,11 +98,11 @@ export interface EditFieldConfig {
         </div>
 
         <!-- Footer Actions -->
-        <div class="pt-4 border-t border-neutral-100 flex items-center justify-end gap-3 shrink-0">
+        <div class="pt-4 border-t border-neutral-100 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 shrink-0">
           <button 
             type="button" 
             (click)="close.emit()"
-            class="px-4 py-2 text-sm text-neutral-600 hover:text-black font-medium transition"
+            class="w-full sm:w-auto min-h-[44px] px-4 py-2 text-sm text-neutral-600 hover:text-black font-medium transition flex items-center justify-center"
           >
             Cancelar
           </button>
@@ -110,7 +110,7 @@ export interface EditFieldConfig {
             type="button" 
             (click)="saveChanges()"
             [disabled]="saving()"
-            class="px-6 py-2.5 bg-black text-white text-sm font-semibold rounded-lg hover:bg-neutral-800 transition disabled:opacity-50 flex items-center gap-2"
+            class="w-full sm:w-auto min-h-[44px] px-6 py-2.5 bg-black text-white text-sm font-semibold rounded-lg hover:bg-neutral-800 transition disabled:opacity-50 flex items-center justify-center gap-2"
           >
             @if (saving()) {
               <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">

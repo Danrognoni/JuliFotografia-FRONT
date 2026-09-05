@@ -11,7 +11,7 @@ import { ToastService } from '../../services/toast.service';
   template: `
     <div class="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
       <div 
-        class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-neutral-200 relative overflow-hidden"
+        class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-5 sm:p-8 border border-neutral-200 relative overflow-hidden"
         (click)="$event.stopPropagation()"
       >
         <!-- Close Button -->

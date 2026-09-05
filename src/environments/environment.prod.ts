@@ -1,5 +1,5 @@
 export const environment = {
-  production: false,
+  production: true,
   apiUrl: 'https://julietphotograph-back.onrender.com/api',
   uploadsUrl: 'https://julietphotograph-back.onrender.com'
 };

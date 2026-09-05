@@ -157,7 +157,7 @@ export interface FaqItem {
                           [href]="whatsappUrl()"
                           target="_blank" 
                           rel="noopener noreferrer"
-                          class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-full shadow-sm hover:shadow-md transition transform hover:-translate-y-0.5 active:translate-y-0 shrink-0"
+                          class="inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-full shadow-sm hover:shadow-md transition transform hover:-translate-y-0.5 active:translate-y-0 shrink-0"
                         >
                           <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
                             <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.969.54 2.02.825 3.09.826 3.181 0 5.767-2.587 5.768-5.766.001-3.182-2.585-5.767-5.768-5.767zm0-2.172c4.418 0 8 3.582 8 8 0 1.545-.44 2.99-1.205 4.225l1.174 4.292-4.401-1.155c-1.189.704-2.57 1.111-4.043 1.111-4.418 0-8-3.582-8-8 0-4.418 3.582-8 8-8z" />
@@ -178,9 +178,9 @@ export interface FaqItem {
         <div 
           appScrollReveal="fade-up"
           [revealDelay]="220"
-          class="mt-12 sm:mt-16 text-center p-6 sm:p-8 rounded-2xl bg-white border border-neutral-200/80 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4"
+          class="mt-12 sm:mt-16 text-center sm:text-left p-6 sm:p-8 rounded-2xl bg-white border border-neutral-200/80 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-5"
         >
-          <div class="text-left">
+          <div class="text-left w-full sm:w-auto">
             <h4 class="text-sm sm:text-base font-bold text-neutral-900">
               ¿Tenés otra duda o un proyecto especial?
             </h4>
@@ -189,10 +189,10 @@ export interface FaqItem {
             </p>
           </div>
 
-          <div class="flex items-center gap-3 shrink-0">
+          <div class="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto shrink-0">
             <a 
               href="#contact"
-              class="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-semibold rounded-full transition"
+              class="w-full sm:w-auto min-h-[44px] flex items-center justify-center px-5 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-semibold rounded-full transition"
             >
               Formulario
             </a>
@@ -200,7 +200,7 @@ export interface FaqItem {
               [href]="whatsappUrl()"
               target="_blank" 
               rel="noopener noreferrer"
-              class="px-4 py-2 bg-neutral-900 hover:bg-black text-white text-xs font-semibold rounded-full shadow-sm hover:shadow transition flex items-center gap-1.5"
+              class="w-full sm:w-auto min-h-[44px] flex items-center justify-center px-5 py-2.5 bg-neutral-900 hover:bg-black text-white text-xs font-semibold rounded-full shadow-sm hover:shadow transition gap-1.5"
             >
               <svg class="w-3.5 h-3.5 fill-emerald-400" viewBox="0 0 24 24">
                 <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.969.54 2.02.825 3.09.826 3.181 0 5.767-2.587 5.768-5.766.001-3.182-2.585-5.767-5.768-5.767zm0-2.172c4.418 0 8 3.582 8 8 0 1.545-.44 2.99-1.205 4.225l1.174 4.292-4.401-1.155c-1.189.704-2.57 1.111-4.043 1.111-4.418 0-8-3.582-8-8 0-4.418 3.582-8 8-8z" />

@@ -51,7 +51,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
                 <span class="text-xs font-bold uppercase tracking-widest text-neutral-400 block mb-2">
                   Conectemos
                 </span>
-                <h2 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-neutral-900 leading-tight">
+                <h2 class="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-neutral-900 leading-tight">
                   {{ siteContentService.content().contactTitle || 'Get in Touch' }}
                 </h2>
                 <p class="mt-4 text-sm sm:text-base text-neutral-600 leading-relaxed max-w-md">
@@ -122,14 +122,14 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
           <div 
             appScrollReveal="scale"
             [revealDelay]="220"
-            class="lg:col-span-7 bg-[#faf9f6] p-8 sm:p-10 rounded-2xl border border-neutral-200/80 shadow-sm"
+            class="lg:col-span-7 bg-[#faf9f6] p-5 sm:p-8 md:p-10 rounded-2xl border border-neutral-200/80 shadow-sm"
           >
             <h3 class="text-xl font-bold tracking-tight text-neutral-900 mb-6">
               Enviar una Consulta
             </h3>
 
-            <form (ngSubmit)="onSubmit()" class="space-y-5">
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <form (ngSubmit)="onSubmit()" class="space-y-4 sm:space-y-5">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 <div>
                   <label class="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Nombre Completo *</label>
                   <input 
@@ -138,7 +138,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
                     name="name" 
                     required 
                     placeholder="Tu nombre"
-                    class="w-full px-4 py-3 rounded-lg border border-neutral-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
+                    class="w-full px-4 py-3 min-h-[44px] rounded-lg border border-neutral-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
                   />
                 </div>
 
@@ -150,7 +150,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
                     name="email" 
                     required 
                     placeholder="tu@email.com"
-                    class="w-full px-4 py-3 rounded-lg border border-neutral-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
+                    class="w-full px-4 py-3 min-h-[44px] rounded-lg border border-neutral-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
                   />
                 </div>
               </div>
@@ -162,7 +162,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
                   [(ngModel)]="formData.subject" 
                   name="subject" 
                   placeholder="Ej. Comisión editorial, Copia Fine Art o Expedición"
-                  class="w-full px-4 py-3 rounded-lg border border-neutral-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
+                  class="w-full px-4 py-3 min-h-[44px] rounded-lg border border-neutral-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
                 />
               </div>
 
@@ -181,7 +181,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
               <button 
                 type="submit" 
                 [disabled]="submitting()"
-                class="w-full sm:w-auto px-8 py-3.5 bg-black hover:bg-neutral-800 text-white text-xs font-bold uppercase tracking-widest rounded-full transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg"
+                class="w-full sm:w-auto px-8 py-3.5 min-h-[48px] bg-black hover:bg-neutral-800 text-white text-xs font-bold uppercase tracking-widest rounded-full transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg active:scale-[0.99]"
               >
                 @if (submitting()) {
                   <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
