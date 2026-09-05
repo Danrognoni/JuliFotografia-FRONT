@@ -386,17 +386,22 @@ export class PortfolioComponent implements OnInit {
   private ensureInitialCoordinates(albums: Album[]) {
     let modified = false;
     const updated = albums.map((alb, i) => {
-      if (alb.xPos === undefined || alb.yPos === undefined || !alb.width) {
+      const hasValidCoordinates =
+        alb.xPos !== undefined && alb.xPos !== null &&
+        alb.yPos !== undefined && alb.yPos !== null &&
+        alb.width !== undefined && alb.width !== null && alb.width > 0;
+
+      if (!hasValidCoordinates) {
         modified = true;
         const col = i % 3;
         const row = Math.floor(i / 3);
         const staggerOffsets = [2, 7, 3];
         return {
           ...alb,
-          xPos: alb.xPos ?? parseFloat((col * 31 + 4).toFixed(2)),
-          yPos: alb.yPos ?? parseFloat((row * 30 + staggerOffsets[col]).toFixed(2)),
-          width: alb.width ?? (col === 1 ? 32 : 28),
-          zIndex: alb.zIndex ?? (i + 1)
+          xPos: alb.xPos != null ? alb.xPos : parseFloat((col * 31 + 4).toFixed(2)),
+          yPos: alb.yPos != null ? alb.yPos : parseFloat((row * 30 + staggerOffsets[col]).toFixed(2)),
+          width: alb.width != null && alb.width > 0 ? alb.width : (col === 1 ? 32 : 28),
+          zIndex: alb.zIndex != null ? alb.zIndex : (i + 1)
         };
       }
       return alb;

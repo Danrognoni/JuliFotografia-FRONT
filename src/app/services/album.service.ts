@@ -30,10 +30,10 @@ export class AlbumService {
                 if (match) {
                   return {
                     ...item,
-                    xPos: item.xPos ?? match.xPos,
-                    yPos: item.yPos ?? match.yPos,
-                    width: item.width ?? match.width,
-                    zIndex: item.zIndex ?? match.zIndex
+                    xPos: item.xPos != null ? item.xPos : match.xPos,
+                    yPos: item.yPos != null ? item.yPos : match.yPos,
+                    width: item.width != null ? item.width : match.width,
+                    zIndex: item.zIndex != null ? item.zIndex : match.zIndex
                   };
                 }
                 return item;
