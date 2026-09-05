@@ -65,11 +65,11 @@ import { CanvasPhoto, PhotoLayoutPayload } from '../../models/canvas-photo.model
         </div>
       </header>
 
-      <!-- MAIN CONTENT -->
-      <main class="max-w-7xl mx-auto px-4 sm:px-8 pt-10 sm:pt-16">
+      <!-- MAIN CONTENT (FULL WIDTH WORKSPACE) -->
+      <main class="w-full pt-10 sm:pt-16 pb-20">
         
         @if (loading()) {
-          <div class="py-32 text-center text-neutral-400">
+          <div class="max-w-7xl mx-auto px-4 sm:px-8 py-32 text-center text-neutral-400">
             <svg class="animate-spin h-8 w-8 text-black mx-auto mb-3" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -77,7 +77,7 @@ import { CanvasPhoto, PhotoLayoutPayload } from '../../models/canvas-photo.model
             <p class="text-sm font-medium">Cargando álbum...</p>
           </div>
         } @else if (!album()) {
-          <div class="py-32 text-center">
+          <div class="max-w-7xl mx-auto px-4 sm:px-8 py-32 text-center">
             <h2 class="text-2xl font-bold text-neutral-800 mb-2">Álbum no encontrado</h2>
             <p class="text-sm text-neutral-500 mb-6">El álbum solicitado no existe o fue eliminado.</p>
             <button 
@@ -90,7 +90,7 @@ import { CanvasPhoto, PhotoLayoutPayload } from '../../models/canvas-photo.model
         } @else {
           
           <!-- ALBUM HEADER: MONUMENTAL EDITORIAL TITLE & NARRATIVE (SCREENSHOT 2 REPLICA) -->
-          <section class="mb-14 sm:mb-20">
+          <section class="max-w-7xl mx-auto px-4 sm:px-8 mb-14 sm:mb-20">
             
             <!-- Admin Top Controls -->
             @if (authService.isAdmin()) {
@@ -145,31 +145,36 @@ import { CanvasPhoto, PhotoLayoutPayload } from '../../models/canvas-photo.model
 
           <!-- STAGGERED EDITORIAL PHOTO GALLERY -->
           @if (!album()!.photos || album()!.photos!.length === 0) {
-            <div class="py-24 text-center border-2 border-dashed border-neutral-300/70 rounded-2xl bg-white/40">
-              <svg class="w-12 h-12 mx-auto mb-3 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <h3 class="text-base font-bold text-neutral-800 mb-1">Este álbum aún no tiene fotografías</h3>
-              <p class="text-xs text-neutral-500 mb-6">Agrega tomas para dar vida a la narrativa visual.</p>
-              
-              @if (authService.isAdmin()) {
-                <button 
-                  (click)="showAddPhotoModal.set(true)"
-                  class="px-5 py-2 bg-black text-white text-xs font-bold rounded-lg hover:bg-neutral-800 transition"
-                >
-                  Subir Primera Foto
-                </button>
-              }
+            <div class="max-w-7xl mx-auto px-4 sm:px-8">
+              <div class="py-24 text-center border-2 border-dashed border-neutral-300/70 rounded-2xl bg-white/40">
+                <svg class="w-12 h-12 mx-auto mb-3 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <h3 class="text-base font-bold text-neutral-800 mb-1">Este álbum aún no tiene fotografías</h3>
+                <p class="text-xs text-neutral-500 mb-6">Agrega tomas para dar vida a la narrativa visual.</p>
+                
+                @if (authService.isAdmin()) {
+                  <button 
+                    (click)="showAddPhotoModal.set(true)"
+                    class="px-5 py-2 bg-black text-white text-xs font-bold rounded-lg hover:bg-neutral-800 transition"
+                  >
+                    Subir Primera Foto
+                  </button>
+                }
+              </div>
             </div>
           } @else {
-            <!-- FREE-FORM EDITORIAL PHOTO CANVAS -->
-            <app-photo-canvas
-              #photoCanvas
-              [photos]="canvasPhotos()"
-              [allowAdminToggle]="authService.isAdmin()"
-              (photoClick)="openLightboxForCanvasPhoto($event)"
-              (saveLayout)="saveCanvasLayout($event)"
-            />
+            <!-- FREE-FORM EDITORIAL PHOTO CANVAS (EXPANDIDO AL 100% DE ANCHO) -->
+            <section class="w-full px-2 sm:px-4 md:px-6">
+              <app-photo-canvas
+                #photoCanvas
+                [photos]="canvasPhotos()"
+                [allowAdminToggle]="authService.isAdmin()"
+                (photoClick)="openLightboxForCanvasPhoto($event)"
+                (saveLayout)="saveCanvasLayout($event)"
+                (deletePhoto)="onDeleteCanvasPhoto($event)"
+              />
+            </section>
           }
 
         }
@@ -181,6 +186,21 @@ import { CanvasPhoto, PhotoLayoutPayload } from '../../models/canvas-photo.model
           class="fixed inset-0 z-[9995] bg-black/95 backdrop-blur-md flex flex-col items-center justify-between p-4 md:p-8 animate-fadeIn select-none"
           (click)="closeLightbox()"
         >
+          <!-- Admin Delete Button in Lightbox -->
+          @if (authService.isAdmin()) {
+            <button 
+              (click)="deleteCurrentLightboxPhoto($event)"
+              class="absolute top-5 right-16 text-white/70 hover:text-red-400 p-2 rounded-full hover:bg-white/10 transition z-50 flex items-center gap-1.5 text-xs font-semibold"
+              aria-label="Eliminar fotografía"
+              title="Eliminar fotografía del álbum"
+            >
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <span class="hidden sm:inline">Eliminar Foto</span>
+            </button>
+          }
+
           <!-- Close Button -->
           <button 
             (click)="closeLightbox(); $event.stopPropagation()"
@@ -582,23 +602,58 @@ export class AlbumDetailComponent implements OnInit {
     this.showAddPhotoModal.set(false);
   }
 
-  deletePhoto(photoId: string, event: Event) {
-    event.stopPropagation();
+  deletePhoto(photoId: string, event?: Event) {
+    if (event) event.stopPropagation();
     const currentAlbum = this.album();
     if (!currentAlbum) return;
 
     if (confirm('¿Deseas eliminar esta fotografía del álbum?')) {
+      const previousAlbum = { ...currentAlbum, photos: [...(currentAlbum.photos || [])] };
+
+      // 1. Actualización reactiva inmediata en la UI
+      this.album.update(alb => {
+        if (!alb || !alb.photos) return alb;
+        const updatedPhotos = alb.photos.filter(p => p.id !== photoId);
+        return { ...alb, photos: updatedPhotos, count: updatedPhotos.length };
+      });
+
+      // 2. Si el visor lightbox estaba abierto en esta foto
+      if (this.activeLightboxIndex() !== null) {
+        const remainingCount = (this.album()?.photos || []).length;
+        if (remainingCount === 0) {
+          this.closeLightbox();
+        } else if (this.activeLightboxIndex()! >= remainingCount) {
+          this.activeLightboxIndex.set(remainingCount - 1);
+        }
+      }
+
+      // 3. Notificar directamente al canvas component para sincronización interna
+      this.photoCanvasComponent?.removePhotoFromCanvas(photoId);
+
+      // 4. Llamada al backend
       this.albumService.deleteAlbumPhoto(currentAlbum.id, photoId).subscribe({
         next: () => {
           this.toastService.success('Fotografía eliminada');
-          this.fetchAlbum(currentAlbum.id);
         },
         error: (err) => {
-          console.error(err);
+          console.error('Error al eliminar fotografía', err);
+          this.album.set(previousAlbum);
           this.toastService.error('Error al eliminar fotografía');
         }
       });
     }
+  }
+
+  deleteCurrentLightboxPhoto(event: Event) {
+    event.stopPropagation();
+    const photo = this.currentLightboxPhoto();
+    if (photo) {
+      this.deletePhoto(photo.id, event);
+    }
+  }
+
+  onDeleteCanvasPhoto(canvasPhoto: CanvasPhoto) {
+    this.deletePhoto(String(canvasPhoto.id));
   }
 
   onAlbumUpdated(updated: Album) {

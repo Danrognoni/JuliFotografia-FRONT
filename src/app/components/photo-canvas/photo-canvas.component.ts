@@ -80,69 +80,84 @@ import {
         </div>
       }
 
-      <!-- CANVAS CONTAINER -->
-      <div
-        #canvasContainer
-        class="canvas-container relative w-full overflow-hidden transition-colors duration-300 rounded-2xl border"
+      <!-- CANVAS CONTAINER (FULL WIDTH EXPANSIVE WORKSPACE) -->
+      <div 
+        class="w-full overflow-x-auto transition-all duration-300 rounded-2xl border border-black/5"
         [ngClass]="[
-          isEditMode() ? 'canvas-grid-pattern border-amber-400/60 bg-[#fbf9f4]' : 'border-black/5 bg-[#faf6e8]'
+          isEditMode() ? 'canvas-grid-pattern border-amber-400/60 bg-[#fbf9f4]' : 'bg-[#faf6e8]'
         ]"
-        [style.minHeight.px]="canvasMinHeight()"
       >
-        <!-- Canvas Background Watermark / Editorial Tag (Subtle aesthetic backdrop) -->
-        <div class="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.03] select-none font-serif text-8xl tracking-widest text-black">
-          COLLAGE
-        </div>
-
-        @if (photosList().length === 0) {
-          <div class="py-32 text-center text-neutral-400">
-            <svg class="w-12 h-12 mx-auto mb-3 text-neutral-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <p class="text-sm font-medium">No hay fotos para mostrar en el lienzo.</p>
+        <div
+          #canvasContainer
+          class="canvas-container relative w-full transition-colors duration-300 min-w-full"
+          [style.minHeight.px]="canvasMinHeight()"
+          [style.minWidth]="canvasMinWidth()"
+        >
+          <!-- Canvas Background Watermark / Editorial Tag (Subtle aesthetic backdrop) -->
+          <div class="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.03] select-none font-serif text-8xl tracking-widest text-black">
+            COLLAGE
           </div>
-        }
 
-        <!-- VISTA MÓVIL RESPONSIVE EN VISTA NORMAL (Pantallas < 640px) -->
-        @if (!isEditMode()) {
-          <div class="sm:hidden block p-3 space-y-6">
-            @for (photo of photosList(); track photo.id; let idx = $index) {
-              <div 
-                (click)="onPhotoClick(photo, $event)"
-                class="relative bg-white rounded-xl shadow-sm border border-neutral-200/80 overflow-hidden cursor-pointer active:scale-[0.99] transition duration-200"
-              >
-                <div class="aspect-[4/3] w-full overflow-hidden bg-neutral-100 relative">
-                  <img
-                    [src]="photo.url"
-                    [alt]="photo.title || photo.caption || 'Fotografía'"
-                    class="w-full h-full object-cover select-none"
-                    loading="lazy"
-                  />
-                </div>
-                @if (photo.caption || photo.title) {
-                  <div class="p-3 bg-white border-t border-neutral-100 flex items-center justify-between">
-                    <span class="inline-block bg-[#feea68] px-2 py-0.5 text-[11px] font-semibold text-neutral-900 tracking-tight shadow-sm rounded-sm">
-                      {{ photo.caption || photo.title }}
-                    </span>
-                    <span class="text-[10px] text-neutral-400 font-mono font-medium uppercase">Ver en grande</span>
+          @if (photosList().length === 0) {
+            <div class="py-32 text-center text-neutral-400">
+              <svg class="w-12 h-12 mx-auto mb-3 text-neutral-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p class="text-sm font-medium">No hay fotos para mostrar en el lienzo.</p>
+            </div>
+          }
+
+          <!-- VISTA MÓVIL RESPONSIVE EN VISTA NORMAL (Pantallas < 640px) -->
+          @if (!isEditMode()) {
+            <div class="sm:hidden block p-3 space-y-6">
+              @for (photo of photosList(); track photo.id; let idx = $index) {
+                <div 
+                  (click)="onPhotoClick(photo, $event)"
+                  class="relative bg-white rounded-xl shadow-sm border border-neutral-200/80 overflow-hidden cursor-pointer active:scale-[0.99] transition duration-200"
+                >
+                  <div class="aspect-[4/3] w-full overflow-hidden bg-neutral-100 relative">
+                    <img
+                      [src]="photo.url"
+                      [alt]="photo.title || photo.caption || 'Fotografía'"
+                      class="w-full h-full object-cover select-none"
+                      loading="lazy"
+                    />
+                    @if (allowAdminToggle) {
+                      <button
+                        type="button"
+                        (click)="onDeletePhoto(photo, $event)"
+                        class="absolute top-2 right-2 z-20 p-2 rounded-full bg-red-600/90 hover:bg-red-700 text-white shadow-md transition"
+                        title="Eliminar fotografía"
+                      >
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    }
                   </div>
-                }
-              </div>
-            }
-          </div>
-        }
+                  @if (photo.caption || photo.title) {
+                    <div class="p-3 bg-white border-t border-neutral-100 flex items-center justify-between">
+                      <span class="inline-block bg-[#feea68] px-2 py-0.5 text-[11px] font-semibold text-neutral-900 tracking-tight shadow-sm rounded-sm">
+                        {{ photo.caption || photo.title }}
+                      </span>
+                      <span class="text-[10px] text-neutral-400 font-mono font-medium uppercase">Ver en grande</span>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
 
-        <!-- PHOTOS LIST (ABSOLUTELY POSITIONED: Desktop o Modo Edición) -->
-        <div [ngClass]="{ 'hidden sm:block': !isEditMode(), 'block': isEditMode() }">
-          @for (photo of photosList(); track photo.id) {
-            <div
-              cdkDrag
-              cdkDragBoundary=".canvas-container"
-              [cdkDragDisabled]="!isEditMode() || isResizing() || isRotating()"
-              [cdkDragFreeDragPosition]="{ x: photo.x, y: photo.y }"
-              (cdkDragStarted)="onDragStarted(photo)"
-              (cdkDragEnded)="onDragEnded(photo, $event)"
-              (click)="onPhotoClick(photo, $event)"
+          <!-- PHOTOS LIST (ABSOLUTELY POSITIONED: Desktop o Modo Edición) -->
+          <div [ngClass]="{ 'hidden sm:block': !isEditMode(), 'block': isEditMode() }">
+            @for (photo of photosList(); track photo.id) {
+              <div
+                cdkDrag
+                [cdkDragDisabled]="!isEditMode() || isResizing() || isRotating()"
+                [cdkDragFreeDragPosition]="{ x: photo.x, y: photo.y }"
+                (cdkDragStarted)="onDragStarted(photo)"
+                (cdkDragEnded)="onDragEnded(photo, $event)"
+                (click)="onPhotoClick(photo, $event)"
               class="canvas-photo-item absolute left-0 top-0 select-none group will-change-transform"
               [ngClass]="{
                 'cursor-grab active:cursor-grabbing touch-none': isEditMode() && !isResizing() && !isRotating(),
@@ -174,6 +189,20 @@ import {
                 <!-- Subtle dark film overlay on hover in view mode -->
                 @if (!isEditMode()) {
                   <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 pointer-events-none"></div>
+                }
+
+                <!-- Admin quick delete button in view mode on hover -->
+                @if (allowAdminToggle && !isEditMode()) {
+                  <button
+                    type="button"
+                    (click)="onDeletePhoto(photo, $event)"
+                    class="absolute top-2 right-2 z-40 p-1.5 rounded-full bg-red-600/90 text-white shadow-md opacity-0 group-hover:opacity-100 hover:bg-red-700 hover:scale-110 transition-all duration-200"
+                    title="Eliminar fotografía"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 }
               </div>
 
@@ -297,11 +326,22 @@ import {
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
+                  <button
+                    type="button"
+                    (click)="onDeletePhoto(photo, $event)"
+                    class="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition"
+                    title="Eliminar fotografía"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 </div>
               }
             </div>
           </div>
         }
+        </div>
       </div>
 
       <!-- FLOATING PERSISTENCE ACTIONS (Visible only in Edit Mode) -->
@@ -493,6 +533,7 @@ export class PhotoCanvasComponent implements OnInit, OnChanges {
   @Output() photoClick = new EventEmitter<CanvasPhoto>();
   @Output() saveLayout = new EventEmitter<PhotoLayoutPayload[]>();
   @Output() editModeChange = new EventEmitter<boolean>();
+  @Output() deletePhoto = new EventEmitter<CanvasPhoto>();
 
   @ViewChild('canvasContainer', { static: false }) canvasContainerRef!: ElementRef<HTMLDivElement>;
 
@@ -520,6 +561,14 @@ export class PhotoCanvasComponent implements OnInit, OnChanges {
     if (list.length === 0) return 600;
     const maxBottom = Math.max(...list.map(p => (p.y || 0) + (p.height || 400)));
     return Math.max(800, maxBottom + 120);
+  });
+
+  // Dynamically computed min width of the expansive canvas workspace
+  readonly canvasMinWidth = computed(() => {
+    const list = this.photosList();
+    if (list.length === 0) return '100%';
+    const maxRight = Math.max(...list.map(p => (p.x || 0) + (p.width || 400)));
+    return maxRight > 0 ? `${Math.max(1200, maxRight + 100)}px` : '100%';
   });
 
   ngOnInit(): void {
@@ -571,31 +620,29 @@ export class PhotoCanvasComponent implements OnInit, OnChanges {
 
   /**
    * Generates a breathtaking Dennis Wanderlight editorial staggered collage layout
+   * dynamically spanning the entire full width of the workspace.
    */
   private computeEditorialCoordinate(photo: CanvasPhoto, index: number, total: number): CanvasPhoto {
     const isPortrait = photo.orientation === 'portrait' || index % 2 === 0;
     const width = isPortrait ? 400 : 520;
     const height = isPortrait ? 540 : 360;
 
-    // Asymmetric 2-3 column staggered editorial flow with organic overlap
-    const column = index % 2;
-    const row = Math.floor(index / 2);
+    // Detect available full-width workspace
+    const availableWidth = typeof window !== 'undefined' ? Math.max(1200, window.innerWidth - 100) : 1400;
 
-    let x = 40;
-    let y = 40;
+    // Asymmetric 2-3 column staggered editorial flow adapting to wide screens
+    const cols = availableWidth >= 1500 ? 3 : (availableWidth >= 800 ? 2 : 1);
+    const column = index % cols;
+    const row = Math.floor(index / cols);
 
-    if (column === 0) {
-      x = 50 + (index % 4 === 0 ? 30 : 0);
-      y = row * 440 + (index % 3 === 1 ? 60 : 0);
-    } else {
-      x = 520 + (index % 3 === 0 ? -40 : 30);
-      y = row * 440 + 90 + (index % 2 === 1 ? 40 : -20);
-    }
+    const colWidth = Math.max(460, Math.floor(availableWidth / cols));
+    const x = 40 + column * colWidth + (index % 3 === 1 ? 30 : -20);
+    const y = row * 440 + (column % 2 === 1 ? 70 : 20);
 
     return {
       ...photo,
-      x: Math.max(20, x),
-      y: Math.max(20, y),
+      x: Math.max(20, Math.round(x)),
+      y: Math.max(20, Math.round(y)),
       width,
       height,
       rotation: photo.rotation || 0,
@@ -852,6 +899,21 @@ export class PhotoCanvasComponent implements OnInit, OnChanges {
     }
     this.hasUnsavedChanges.set(false);
     this.selectedPhotoId.set(null);
+  }
+
+  onDeletePhoto(photo: CanvasPhoto, event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.deletePhoto.emit(photo);
+  }
+
+  removePhotoFromCanvas(photoId: string | number): void {
+    const idStr = String(photoId);
+    this.photosList.update(list => list.filter(p => String(p.id) !== idStr));
+    this.backupPhotos = this.backupPhotos.filter(p => String(p.id) !== idStr);
+    if (String(this.selectedPhotoId()) === idStr) {
+      this.selectedPhotoId.set(null);
+    }
   }
 
   @HostListener('document:click', ['$event'])
