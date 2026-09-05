@@ -6,11 +6,12 @@ import { SiteContentService } from '../../services/site-content.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { ContactMessage } from '../../models/contact.model';
+import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive';
 
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ScrollRevealDirective],
   template: `
     <section id="contact" class="py-24 sm:py-32 bg-white text-neutral-900 border-t border-neutral-200/60 relative">
       <div class="max-w-7xl mx-auto px-4 sm:px-8">
@@ -43,18 +44,27 @@ import { ContactMessage } from '../../models/contact.model';
           <!-- Left Column: Inquiry Information -->
           <div class="lg:col-span-5 flex flex-col justify-between">
             <div>
-              <span class="text-xs font-bold uppercase tracking-widest text-neutral-400 block mb-2">
-                Conectemos
-              </span>
-              <h2 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-neutral-900 leading-tight">
-                {{ siteContentService.content().contactTitle || 'Get in Touch' }}
-              </h2>
-              <p class="mt-4 text-sm sm:text-base text-neutral-600 leading-relaxed max-w-md">
-                {{ siteContentService.content().contactSubtitle || 'Available for global expeditions, commercial assignments and fine art print inquiries.' }}
-              </p>
+              <div 
+                appScrollReveal="fade-up"
+                [revealDelay]="60"
+              >
+                <span class="text-xs font-bold uppercase tracking-widest text-neutral-400 block mb-2">
+                  Conectemos
+                </span>
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-neutral-900 leading-tight">
+                  {{ siteContentService.content().contactTitle || 'Get in Touch' }}
+                </h2>
+                <p class="mt-4 text-sm sm:text-base text-neutral-600 leading-relaxed max-w-md">
+                  {{ siteContentService.content().contactSubtitle || 'Available for global expeditions, commercial assignments and fine art print inquiries.' }}
+                </p>
+              </div>
 
               <!-- Information Cards -->
-              <div class="mt-10 space-y-6">
+              <div 
+                appScrollReveal="fade-up"
+                [revealDelay]="180"
+                class="mt-10 space-y-6"
+              >
                 <!-- Location -->
                 <div class="flex items-start gap-4">
                   <div class="p-2.5 bg-neutral-100 rounded-lg text-neutral-700 shrink-0">
@@ -109,7 +119,11 @@ import { ContactMessage } from '../../models/contact.model';
           </div>
 
           <!-- Right Column: Minimalist Contact Form -->
-          <div class="lg:col-span-7 bg-[#faf9f6] p-8 sm:p-10 rounded-2xl border border-neutral-200/80 shadow-sm">
+          <div 
+            appScrollReveal="scale"
+            [revealDelay]="220"
+            class="lg:col-span-7 bg-[#faf9f6] p-8 sm:p-10 rounded-2xl border border-neutral-200/80 shadow-sm"
+          >
             <h3 class="text-xl font-bold tracking-tight text-neutral-900 mb-6">
               Enviar una Consulta
             </h3>

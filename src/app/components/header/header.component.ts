@@ -1,5 +1,5 @@
-import { Component, EventEmitter, Output, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, Output, inject, signal, HostListener, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { SiteContentService } from '../../services/site-content.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -9,21 +9,35 @@ import { AuthService } from '../../services/auth.service';
   imports: [CommonModule],
   template: `
     <header 
-      class="absolute top-0 left-0 right-0 z-40 transition-all duration-300 pointer-events-none"
-      [class.pt-10]="authService.isAdmin()"
+      class="fixed left-0 right-0 z-40 transition-all duration-300 pointer-events-none"
+      [style.top]="authService.isAdmin() ? '38px' : '0px'"
+      [ngClass]="{
+        'bg-transparent border-b border-transparent py-5 sm:py-6': !isScrolled(),
+        'bg-neutral-950/80 backdrop-blur-xl border-b border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.4)] py-2 sm:py-2.5': isScrolled()
+      }"
     >
-      <div class="max-w-7xl mx-auto px-4 sm:px-8 py-5 sm:py-6 flex items-start justify-between">
-        <!-- Logo / Dynamic Brand Identity Card (Glassmorphism, non-solid-white) -->
+      <div class="max-w-7xl mx-auto px-4 sm:px-8 flex items-center justify-between transition-all duration-300">
+        <!-- Logo / Dynamic Brand Identity Card -->
         <div class="pointer-events-auto flex items-center gap-2 group">
           <a 
             href="#home" 
-            class="flex items-center gap-3 backdrop-blur-md bg-black/25 hover:bg-black/35 px-4 py-2.5 rounded-xl border border-white/15 shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-300 group-hover:border-white/30"
+            class="flex items-center gap-3 backdrop-blur-md rounded-xl border border-white/15 shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-300 group-hover:border-white/30"
+            [ngClass]="{
+              'bg-black/25 hover:bg-black/35 px-4 py-2.5': !isScrolled(),
+              'bg-black/40 hover:bg-black/50 px-3 py-1.5': isScrolled()
+            }"
           >
             <div class="flex flex-col text-left leading-tight">
-              <span class="font-bold text-xs sm:text-sm tracking-widest uppercase text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">
+              <span 
+                class="font-bold tracking-widest uppercase text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)] transition-all duration-300"
+                [ngClass]="isScrolled() ? 'text-xs sm:text-xs' : 'text-xs sm:text-sm'"
+              >
                 {{ siteContentService.content().brandName || 'Julieta Marateo' }}
               </span>
-              <span class="text-[10px] sm:text-[11px] font-light tracking-wider text-white/80 drop-shadow-[0_1px_4px_rgba(0,0,0,0.7)] mt-0.5">
+              <span 
+                class="font-light tracking-wider text-white/80 drop-shadow-[0_1px_4px_rgba(0,0,0,0.7)] mt-0.5 transition-all duration-300"
+                [ngClass]="isScrolled() ? 'text-[9px] sm:text-[10px]' : 'text-[10px] sm:text-[11px]'"
+              >
                 {{ siteContentService.content().brandTagline || 'Fotografía & Expediciones' }}
               </span>
             </div>
@@ -45,7 +59,13 @@ import { AuthService } from '../../services/auth.service';
         </div>
 
         <!-- Desktop Navigation Bar (Translucent Glassmorphism) -->
-        <nav class="pointer-events-auto hidden md:flex items-center backdrop-blur-md bg-black/25 px-3 py-1.5 rounded-xl border border-white/15 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+        <nav 
+          class="pointer-events-auto hidden md:flex items-center backdrop-blur-md rounded-xl border border-white/15 shadow-[0_4px_20px_rgba(0,0,0,0.3)] transition-all duration-300"
+          [ngClass]="{
+            'bg-black/25 px-3 py-1.5': !isScrolled(),
+            'bg-white/5 px-2.5 py-1 border-white/10': isScrolled()
+          }"
+        >
           <a 
             href="#home" 
             class="px-3.5 py-1.5 text-xs font-medium text-white/90 hover:text-white transition tracking-wider uppercase hover:underline underline-offset-4 drop-shadow-[0_1px_4px_rgba(0,0,0,0.7)]"
@@ -65,6 +85,13 @@ import { AuthService } from '../../services/auth.service';
             class="px-3.5 py-1.5 text-xs font-medium text-white/90 hover:text-white transition tracking-wider uppercase hover:underline underline-offset-4 drop-shadow-[0_1px_4px_rgba(0,0,0,0.7)]"
           >
             {{ siteContentService.content().menuAbout || 'About' }}
+          </a>
+
+          <a 
+            href="#faq" 
+            class="px-3.5 py-1.5 text-xs font-medium text-white/90 hover:text-white transition tracking-wider uppercase hover:underline underline-offset-4 drop-shadow-[0_1px_4px_rgba(0,0,0,0.7)]"
+          >
+            FAQ
           </a>
 
           <a 
@@ -141,6 +168,13 @@ import { AuthService } from '../../services/auth.service';
             </a>
             <a 
               (click)="mobileMenuOpen = false" 
+              href="#faq" 
+              class="text-sm font-medium tracking-wide text-neutral-200 hover:text-white py-1.5 border-b border-white/10"
+            >
+              FAQ
+            </a>
+            <a 
+              (click)="mobileMenuOpen = false" 
               href="#contact" 
               class="text-sm font-medium tracking-wide text-neutral-200 hover:text-white py-1.5"
             >
@@ -158,6 +192,16 @@ export class HeaderComponent {
 
   readonly siteContentService = inject(SiteContentService);
   readonly authService = inject(AuthService);
+  private readonly platformId = inject(PLATFORM_ID);
 
+  readonly isScrolled = signal(false);
   mobileMenuOpen = false;
+
+  @HostListener('window:scroll', [])
+  onWindowScroll() {
+    if (isPlatformBrowser(this.platformId)) {
+      const scroll = window.scrollY || document.documentElement.scrollTop || 0;
+      this.isScrolled.set(scroll > 40);
+    }
+  }
 }

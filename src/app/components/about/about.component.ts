@@ -2,11 +2,12 @@ import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SiteContentService } from '../../services/site-content.service';
 import { AuthService } from '../../services/auth.service';
+import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive';
 
 @Component({
   selector: 'app-about',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ScrollRevealDirective],
   template: `
     <section id="about" class="py-24 sm:py-32 bg-[#faf9f6] text-neutral-900 border-t border-neutral-200/60 relative">
       <div class="max-w-7xl mx-auto px-4 sm:px-8">
@@ -28,7 +29,10 @@ import { AuthService } from '../../services/auth.service';
         <!-- Editorial Two-Column Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           <!-- Left Column: Portrait & Visual Badge -->
-          <div class="lg:col-span-5 relative">
+          <div 
+            appScrollReveal="scale"
+            class="lg:col-span-5 relative"
+          >
             <div class="relative w-full max-w-md mx-auto aspect-[3/4] overflow-hidden rounded-none shadow-2xl bg-neutral-900 group">
               <img 
                 [src]="siteContentService.getImageUrl(siteContentService.content().aboutImageUrl)" 
@@ -45,34 +49,58 @@ import { AuthService } from '../../services/auth.service';
           <!-- Right Column: Bio & Artist Statement -->
           <div class="lg:col-span-7 flex flex-col justify-center">
             <!-- Kicker -->
-            <span class="text-xs font-bold tracking-widest text-neutral-400 uppercase mb-3 block">
+            <span 
+              appScrollReveal="fade-up"
+              [revealDelay]="60"
+              class="text-xs font-bold tracking-widest text-neutral-400 uppercase mb-3 block"
+            >
               Detras del lente
             </span>
 
             <!-- Name / Title -->
-            <h2 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-neutral-900 leading-tight">
+            <h2 
+              appScrollReveal="fade-up"
+              [revealDelay]="140"
+              class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-neutral-900 leading-tight"
+            >
               {{ siteContentService.content().aboutTitle || 'Dennis Wanderlight' }}
             </h2>
-            <p class="text-sm sm:text-base font-medium text-neutral-500 mt-1 mb-6">
+            <p 
+              appScrollReveal="fade-up"
+              [revealDelay]="200"
+              class="text-sm sm:text-base font-medium text-neutral-500 mt-1 mb-6"
+            >
               {{ siteContentService.content().aboutSubtitle || 'Travel & Documentary Photographer' }}
             </p>
 
             <!-- Bio Text -->
-            <div class="text-sm sm:text-base text-neutral-700 leading-relaxed space-y-4 font-normal">
+            <div 
+              appScrollReveal="fade-up"
+              [revealDelay]="260"
+              class="text-sm sm:text-base text-neutral-700 leading-relaxed space-y-4 font-normal"
+            >
               <p>
                 {{ siteContentService.content().aboutBio }}
               </p>
             </div>
 
             <!-- Artist Quote Card -->
-            <div class="mt-8 pl-4 border-l-2 border-neutral-900 py-1">
+            <div 
+              appScrollReveal="fade-up"
+              [revealDelay]="320"
+              class="mt-8 pl-4 border-l-2 border-neutral-900 py-1"
+            >
               <p class="text-sm sm:text-base italic font-serif text-neutral-800 leading-relaxed">
                 "{{ siteContentService.content().aboutQuote || 'Photography is not about documenting places; it is about holding on to the ephemeral light and silent narratives that define who we are.' }}"
               </p>
             </div>
 
             <!-- Social / Quick Contact Pills -->
-            <div class="mt-8 flex flex-wrap items-center gap-3">
+            <div 
+              appScrollReveal="fade-up"
+              [revealDelay]="380"
+              class="mt-8 flex flex-wrap items-center gap-3"
+            >
               @if (siteContentService.content().instagramHandle) {
                 <a 
                   [href]="'https://instagram.com/' + cleanHandle(siteContentService.content().instagramHandle)"
@@ -101,15 +129,8 @@ import { AuthService } from '../../services/auth.service';
                 </a>
               }
 
-              <a 
-                href="#contact"
-                class="inline-flex items-center gap-2 px-5 py-2 bg-black hover:bg-neutral-800 text-white text-xs font-semibold rounded-full transition"
-              >
-                <span>Escribir a Dennis</span>
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </a>
+           
+             
             </div>
           </div>
         </div>

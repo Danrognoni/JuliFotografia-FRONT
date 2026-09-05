@@ -1,27 +1,125 @@
 @import 'tailwindcss';
 
+/* ==========================================================================
+   Custom Webfonts: FK Roman Standard & Studio Pro
+   ========================================================================== */
+
+/* FK Roman Standard - Regular (400) */
+@font-face {
+  font-family: 'FK Roman Standard';
+  src: url('/fonts/fk-roman-standard/FKRomanStandard-Regular.woff2') format('woff2'),
+       url('/fonts/fk-roman-standard/FKRomanStandard-Regular.woff') format('woff'),
+       url('/fonts/fk-roman-standard/FKRomanStandard-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* FK Roman Standard - Italic (400) */
+@font-face {
+  font-family: 'FK Roman Standard';
+  src: url('/fonts/fk-roman-standard/FKRomanStandard-Italic.woff2') format('woff2'),
+       url('/fonts/fk-roman-standard/FKRomanStandard-Italic.woff') format('woff'),
+       url('/fonts/fk-roman-standard/FKRomanStandard-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* FK Roman Standard - Bold (700) */
+@font-face {
+  font-family: 'FK Roman Standard';
+  src: url('/fonts/fk-roman-standard/FKRomanStandard-Bold.woff2') format('woff2'),
+       url('/fonts/fk-roman-standard/FKRomanStandard-Bold.woff') format('woff'),
+       url('/fonts/fk-roman-standard/FKRomanStandard-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Studio Pro - Regular (400) */
+@font-face {
+  font-family: 'Studio Pro';
+  src: url('/fonts/studio-pro/StudioPro-Regular.woff2') format('woff2'),
+       url('/fonts/studio-pro/StudioPro-Regular.woff') format('woff'),
+       url('/fonts/studio-pro/StudioPro-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Studio Pro - Medium (500) */
+@font-face {
+  font-family: 'Studio Pro';
+  src: url('/fonts/studio-pro/StudioPro-Medium.woff2') format('woff2'),
+       url('/fonts/studio-pro/StudioPro-Medium.woff') format('woff'),
+       url('/fonts/studio-pro/StudioPro-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Studio Pro - Bold (700) */
+@font-face {
+  font-family: 'Studio Pro';
+  src: url('/fonts/studio-pro/StudioPro-Bold.woff2') format('woff2'),
+       url('/fonts/studio-pro/StudioPro-Bold.woff') format('woff'),
+       url('/fonts/studio-pro/StudioPro-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
-  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-display: 'Space Grotesk', sans-serif;
-  --font-editorial: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Studio Pro', 'Inter', 'Helvetica Neue', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'FK Roman Standard', 'Playfair Display', Georgia, serif;
+  --font-display: 'FK Roman Standard', 'Playfair Display', Georgia, serif;
+  --font-heading: 'FK Roman Standard', 'Playfair Display', Georgia, serif;
+  --font-body: 'Studio Pro', 'Inter', 'Helvetica Neue', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-editorial: 'FK Roman Standard', 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
 }
 
 :root {
+  --font-heading: 'FK Roman Standard', 'Playfair Display', Georgia, serif;
+  --font-body: 'Studio Pro', 'Inter', 'Helvetica Neue', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --editorial-bg: #faf9f6;
   --editorial-dark: #121212;
 }
 
 html {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-body);
   scroll-behavior: smooth;
 }
 
-/* Dennis Wanderlight editorial title style */
+body {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Global Headings: FK Roman Standard */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.015em;
+}
+
+/* Editorial display title style */
 .editorial-title {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  letter-spacing: -0.04em;
+  font-family: var(--font-heading);
+  letter-spacing: -0.025em;
   font-weight: 700;
-  line-height: 0.95;
+  line-height: 1.05;
+}
+
+/* UI Elements, Buttons, Inputs, Nav Links */
+button,
+input,
+textarea,
+select,
+nav,
+.font-sans,
+.ui-text {
+  font-family: var(--font-body);
 }
 
 /* Subtle target aperture dot icon */
@@ -59,4 +157,73 @@ html {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #999;
+}
+
+/* ==========================================================================
+   Editorial Scroll Reveal Animations & Parallax Utilities
+   ========================================================================== */
+
+/* Base element awaiting reveal */
+.reveal-init {
+  opacity: 0;
+  transform: translateY(35px) scale(0.96);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+/* Revealed active state */
+.reveal-init.is-revealed {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Specific reveal variants */
+.reveal-fade-up {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal-fade-up.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.93) translateY(25px);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal-scale.is-revealed {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+.reveal-fade {
+  opacity: 0;
+  transition: opacity 0.8s ease-out;
+  will-change: opacity;
+}
+.reveal-fade.is-revealed {
+  opacity: 1;
+}
+
+/* Staggered Delay Utilities */
+.stagger-1 { transition-delay: 100ms !important; }
+.stagger-2 { transition-delay: 200ms !important; }
+.stagger-3 { transition-delay: 300ms !important; }
+.stagger-4 { transition-delay: 400ms !important; }
+.stagger-5 { transition-delay: 500ms !important; }
+
+/* Accessible motion reduction */
+@media (prefers-reduced-motion: reduce) {
+  .reveal-init,
+  .reveal-fade-up,
+  .reveal-scale,
+  .reveal-fade {
+    transition: opacity 0.2s ease-out !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
 }

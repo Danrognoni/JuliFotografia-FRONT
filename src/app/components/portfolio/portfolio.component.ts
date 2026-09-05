@@ -38,17 +38,17 @@ import {
         
         <!-- Header & Admin Toolbar -->
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10 md:mb-16 max-w-7xl mx-auto">
-          <div class="flex items-center gap-3">
-            <span class="text-[11px] font-semibold tracking-wider text-neutral-500 uppercase">
-              Portfolio & Expediciones
-            </span>
-            @if (isEditLayoutMode()) {
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                Modo Edición Canvas
-              </span>
-            }
-          </div>
+          <div class="flex flex-wrap items-center justify-center gap-3 text-center">
+  <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-neutral-900 uppercase">
+  Portfolio & Expediciones
+</h1>
+    @if (isEditLayoutMode()) {
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+        <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+        Modo Edición Canvas
+      </span>
+    }
+  </div>
 
           <!-- Admin Quick Action Toolbar -->
           @if (authService.isAdmin()) {
@@ -734,7 +734,7 @@ export class PortfolioComponent implements OnInit {
     const targetHandle = event.target as HTMLElement;
     try {
       targetHandle.setPointerCapture(event.pointerId);
-    } catch {}
+    } catch { }
 
     const itemElem = (event.target as HTMLElement).closest('.album-item-container') as HTMLElement;
     if (!itemElem) return;
@@ -757,7 +757,7 @@ export class PortfolioComponent implements OnInit {
     const onPointerUp = (upEvent: PointerEvent) => {
       try {
         targetHandle.releasePointerCapture(upEvent.pointerId);
-      } catch {}
+      } catch { }
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
       setTimeout(() => {
@@ -802,7 +802,7 @@ export class PortfolioComponent implements OnInit {
     const targetHandle = event.target as HTMLElement;
     try {
       targetHandle.setPointerCapture(event.pointerId);
-    } catch {}
+    } catch { }
 
     const itemElem = (event.target as HTMLElement).closest('.album-item-container') as HTMLElement;
     if (!itemElem) return;
@@ -857,13 +857,13 @@ export class PortfolioComponent implements OnInit {
         list.map(a =>
           a.id === album.id
             ? {
-                ...a,
-                width: clampedWidth,
-                height: transformed.height,
-                xPos: clampedX,
-                yPos: clampedY,
-                zIndex: this.highestZIndex
-              }
+              ...a,
+              width: clampedWidth,
+              height: transformed.height,
+              xPos: clampedX,
+              yPos: clampedY,
+              zIndex: this.highestZIndex
+            }
             : a
         )
       );
@@ -873,7 +873,7 @@ export class PortfolioComponent implements OnInit {
     const onMouseUp = (upEvent: PointerEvent) => {
       try {
         targetHandle.releasePointerCapture(upEvent.pointerId);
-      } catch {}
+      } catch { }
       window.removeEventListener('pointermove', onMouseMove);
       window.removeEventListener('pointerup', onMouseUp);
       setTimeout(() => {

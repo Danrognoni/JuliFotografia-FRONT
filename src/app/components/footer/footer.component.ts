@@ -50,6 +50,9 @@ import { AuthService } from '../../services/auth.service';
             <a href="#about" class="hover:text-white transition">
               {{ siteContentService.content().menuAbout || 'About' }}
             </a>
+            <a href="#faq" class="hover:text-white transition">
+              FAQ
+            </a>
             <a href="#contact" class="hover:text-white transition">
               {{ siteContentService.content().menuContact || 'Contact' }}
             </a>

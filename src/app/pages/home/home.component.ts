@@ -5,6 +5,7 @@ import { HeroComponent } from '../../components/hero/hero.component';
 import { StoryCardComponent } from '../../components/story-card/story-card.component';
 import { PortfolioComponent } from '../../components/portfolio/portfolio.component';
 import { AboutComponent } from '../../components/about/about.component';
+import { FaqComponent } from '../../components/faq/faq.component';
 import { ContactComponent } from '../../components/contact/contact.component';
 import { FooterComponent } from '../../components/footer/footer.component';
 import { AdminBarComponent } from '../../components/admin-bar/admin-bar.component';
@@ -26,6 +27,7 @@ import { Photo } from '../../models/photo.model';
     PortfolioComponent,
     StoryCardComponent,
     AboutComponent,
+    FaqComponent,
     ContactComponent,
     FooterComponent,
     AdminBarComponent,
@@ -66,10 +68,13 @@ import { Photo } from '../../models/photo.model';
           (editStory)="openEditStoryModal()"
         />
 
-        <!-- 5. About Me / The Story -->
+        <!-- 4. About Me / The Story -->
         <app-about 
           (editAbout)="openEditAboutModal()"
         />
+
+        <!-- 5. FAQ / Preguntas Frecuentes -->
+        <app-faq />
 
         <!-- 6. Contact Form -->
         <app-contact 

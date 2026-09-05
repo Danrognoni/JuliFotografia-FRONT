@@ -1,22 +1,24 @@
-import { Component, EventEmitter, Output, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, Output, inject, ElementRef, signal, HostListener, OnInit, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { SiteContentService } from '../../services/site-content.service';
 import { AuthService } from '../../services/auth.service';
+import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive';
 
 @Component({
   selector: 'app-story-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ScrollRevealDirective],
   template: `
     <section class="relative w-full min-h-[750px] lg:h-[90vh] flex items-center justify-center overflow-hidden py-20">
-      <!-- Panoramic Background Image -->
-      <div class="absolute inset-0 z-0">
+      <!-- Panoramic Background Image with Parallax Depth -->
+      <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <img 
           [src]="siteContentService.getImageUrl(siteContentService.content().storyBgUrl)" 
           alt="Dennis Wanderlight - Beyond the frame"
-          class="w-full h-full object-cover object-center"
+          class="w-full h-full object-cover object-center will-change-transform"
+          [style.transform]="'translate3d(0, ' + parallaxOffset() + 'px, 0) scale(1.18)'"
         />
-        <div class="absolute inset-0 bg-black/20"></div>
+        <div class="absolute inset-0 bg-black/25"></div>
       </div>
 
       <!-- Admin In-situ Edit Button -->
@@ -37,14 +39,22 @@ import { AuthService } from '../../services/auth.service';
       <!-- Three-Part Composition: Left Caption, Centered Portrait Card, Right Caption -->
       <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 w-full flex flex-col md:flex-row items-center justify-between gap-8">
         <!-- Left Flanking Text -->
-        <div class="md:w-1/4 text-center md:text-left order-2 md:order-1">
+        <div 
+          appScrollReveal="fade-up"
+          [revealDelay]="120"
+          class="md:w-1/4 text-center md:text-left order-2 md:order-1"
+        >
           <span class="text-white text-lg sm:text-xl font-medium tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
             {{ siteContentService.content().storyKickerLeft || 'Beyond the frame' }}
           </span>
         </div>
 
-        <!-- Centered Portrait Card with "My Story" Pill Button (Screenshot 3 Replica) -->
-        <div class="order-1 md:order-2 flex flex-col items-center">
+        <!-- Centered Portrait Card with "My Story" Pill Button -->
+        <div 
+          appScrollReveal="scale"
+          [revealDelay]="220"
+          class="order-1 md:order-2 flex flex-col items-center"
+        >
           <div class="relative w-72 sm:w-80 md:w-96 rounded-none shadow-2xl overflow-hidden bg-neutral-900 group">
             <!-- Portrait of Dennis -->
             <div class="aspect-[4/5] overflow-hidden">
@@ -69,7 +79,11 @@ import { AuthService } from '../../services/auth.service';
         </div>
 
         <!-- Right Flanking Text -->
-        <div class="md:w-1/4 text-center md:text-right order-3">
+        <div 
+          appScrollReveal="fade-up"
+          [revealDelay]="320"
+          class="md:w-1/4 text-center md:text-right order-3"
+        >
           <span class="text-white text-lg sm:text-xl font-medium tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
             {{ siteContentService.content().storyKickerRight || 'Stories in motion' }}
           </span>
@@ -78,9 +92,50 @@ import { AuthService } from '../../services/auth.service';
     </section>
   `
 })
-export class StoryCardComponent {
+export class StoryCardComponent implements OnInit {
   @Output() editStory = new EventEmitter<void>();
 
   readonly siteContentService = inject(SiteContentService);
   readonly authService = inject(AuthService);
+  private readonly el = inject(ElementRef);
+  private readonly platformId = inject(PLATFORM_ID);
+
+  readonly parallaxOffset = signal(0);
+  private isBrowser = false;
+  private prefersReducedMotion = false;
+  private ticking = false;
+
+  ngOnInit() {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+    if (this.isBrowser) {
+      this.prefersReducedMotion = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      this.calculateParallax();
+    }
+  }
+
+  @HostListener('window:scroll', [])
+  onWindowScroll() {
+    if (!this.isBrowser || this.prefersReducedMotion) return;
+    if (!this.ticking) {
+      window.requestAnimationFrame(() => {
+        this.calculateParallax();
+        this.ticking = false;
+      });
+      this.ticking = true;
+    }
+  }
+
+  private calculateParallax() {
+    const nativeEl = this.el.nativeElement as HTMLElement;
+    const rect = nativeEl.getBoundingClientRect();
+    const windowH = window.innerHeight;
+
+    // Check if within reasonable proximity of viewport
+    if (rect.bottom > -100 && rect.top < windowH + 100) {
+      const centerDelta = (rect.top + rect.height / 2) - (windowH / 2);
+      // Subtle parallax movement
+      const offset = Math.round(centerDelta * -0.15);
+      this.parallaxOffset.set(offset);
+    }
+  }
 }
