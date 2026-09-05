@@ -1,14 +1,17 @@
 import { Component, EventEmitter, Output, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PhotoService } from '../../services/photo.service';
+import { AlbumService } from '../../services/album.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { Photo } from '../../models/photo.model';
+import { Album } from '../../models/album.model';
+import { AlbumModalComponent } from '../album-modal/album-modal.component';
 
 @Component({
   selector: 'app-portfolio',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AlbumModalComponent],
   template: `
     <section id="portfolio" class="py-24 sm:py-32 bg-white text-neutral-900 relative">
       <div class="max-w-7xl mx-auto px-4 sm:px-8">
@@ -19,38 +22,90 @@ import { Photo } from '../../models/photo.model';
               Galería & Expediciones
             </span>
             <h2 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-neutral-900">
-              Selected Works
+              Fotografias
             </h2>
             <p class="text-sm text-neutral-500 mt-2 max-w-lg">
-              Visual dispatches from remote corners, fleeting lights, and nocturnal wanderings.
+              Foto producto, paisajismo, moda y demas.
             </p>
           </div>
 
-          <!-- Admin Quick Upload Action -->
+          <!-- Admin Quick Actions (Upload & Album) -->
           @if (authService.isAdmin()) {
-            <button 
-              (click)="openUpload.emit()"
-              class="inline-flex items-center gap-2 px-5 py-2.5 bg-black text-white text-xs font-bold rounded-lg hover:bg-neutral-800 transition shadow-md self-start md:self-auto"
-            >
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-              </svg>
-              <span>+ Subir Nueva Foto</span>
-            </button>
+            <div class="flex items-center gap-3 self-start md:self-auto flex-wrap">
+              <button 
+                (click)="showCreateAlbumModal.set(true)"
+                class="inline-flex items-center gap-2 px-4 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 text-xs font-bold rounded-lg border border-neutral-300 shadow-sm transition hover:shadow"
+              >
+                <svg class="w-4 h-4 text-neutral-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>+ Nuevo Álbum</span>
+              </button>
+
+              <button 
+                (click)="openUpload.emit()"
+                class="inline-flex items-center gap-2 px-5 py-2.5 bg-black text-white text-xs font-bold rounded-lg hover:bg-neutral-800 transition shadow-md"
+              >
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>+ Subir Nueva Foto</span>
+              </button>
+            </div>
           }
         </div>
 
-        <!-- Filter Categories Pills -->
+        <!-- Filter Categories Pills (Dynamic Albums from Backend) -->
         <div class="flex items-center gap-2 overflow-x-auto pb-4 mb-10 no-scrollbar border-b border-neutral-100">
-          @for (cat of categories; track cat) {
+          <button 
+            (click)="setCategory('All')"
+            class="px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition duration-200"
+            [ngClass]="activeCategory() === 'All' 
+              ? 'bg-black text-white shadow-sm' 
+              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 hover:text-black'"
+          >
+            Todos
+          </button>
+
+          @for (album of albumService.albums(); track album.id) {
+            <div class="inline-flex items-center group">
+              <button 
+                (click)="setCategory(album.name)"
+                class="px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition duration-200 flex items-center gap-1.5"
+                [ngClass]="activeCategory().toLowerCase() === album.name.toLowerCase() 
+                  ? 'bg-black text-white shadow-sm' 
+                  : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 hover:text-black'"
+              >
+                <span>{{ album.name }}</span>
+                @if (album.count !== undefined && album.count > 0) {
+                  <span class="text-[10px] opacity-70">({{ album.count }})</span>
+                }
+              </button>
+
+              @if (authService.isAdmin()) {
+                <button 
+                  (click)="confirmDeleteAlbum(album, $event)"
+                  class="ml-1 p-1 text-neutral-400 hover:text-rose-600 rounded-full hover:bg-rose-50 transition"
+                  title="Eliminar álbum '{{ album.name }}'"
+                  aria-label="Eliminar álbum"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              }
+            </div>
+          }
+
+          @if (authService.isAdmin()) {
             <button 
-              (click)="setCategory(cat)"
-              class="px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition duration-200"
-              [ngClass]="activeCategory() === cat 
-                ? 'bg-black text-white shadow-sm' 
-                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 hover:text-black'"
+              (click)="showCreateAlbumModal.set(true)"
+              class="px-3 py-1.5 rounded-full text-xs font-medium text-neutral-500 hover:text-black border border-dashed border-neutral-300 hover:border-black whitespace-nowrap transition flex items-center gap-1"
             >
-              {{ cat }}
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Nuevo Álbum</span>
             </button>
           }
         </div>
@@ -315,6 +370,62 @@ import { Photo } from '../../models/photo.model';
           }
         </div>
       }
+
+      <!-- Album Delete Confirmation Modal -->
+      @if (albumToDelete()) {
+        <div class="fixed inset-0 z-[9992] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div 
+            class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-neutral-200"
+            (click)="$event.stopPropagation()"
+          >
+            <div class="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mb-4">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </div>
+            <h4 class="text-lg font-bold text-neutral-900 mb-1">
+              ¿Eliminar Álbum?
+            </h4>
+            <p class="text-xs text-neutral-500 mb-6 leading-relaxed">
+              ¿Estás seguro de que deseas eliminar el álbum <strong class="text-neutral-800">"{{ albumToDelete()?.name }}"</strong>? Esta acción borrará la categoría en el backend. Las fotos asociadas no serán eliminadas físicamente.
+            </p>
+            <div class="flex items-center justify-end gap-2.5">
+              <button 
+                type="button" 
+                (click)="albumToDelete.set(null)"
+                [disabled]="deletingAlbum()"
+                class="px-4 py-2 text-xs font-semibold text-neutral-600 hover:text-black transition"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="button" 
+                (click)="executeDeleteAlbum()"
+                [disabled]="deletingAlbum()"
+                class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg shadow-sm transition flex items-center gap-1.5 disabled:opacity-50"
+              >
+                @if (deletingAlbum()) {
+                  <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Borrando...</span>
+                } @else {
+                  <span>Eliminar</span>
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Album Create Modal -->
+      @if (showCreateAlbumModal()) {
+        <app-album-modal 
+          (close)="showCreateAlbumModal.set(false)"
+          (saved)="onAlbumCreated($event)"
+        />
+      }
     </section>
   `
 })
@@ -323,21 +434,19 @@ export class PortfolioComponent implements OnInit {
   @Output() editPhoto = new EventEmitter<Photo>();
 
   readonly photoService = inject(PhotoService);
+  readonly albumService = inject(AlbumService);
   readonly authService = inject(AuthService);
   private readonly toastService = inject(ToastService);
-
-  readonly categories = [
-    'All',
-    'Tokyo Neon Pulse',
-    'Wilderness & Peaks',
-    'Silent Deserts',
-    'Portraits of the Edge'
-  ];
 
   readonly activeCategory = signal('All');
   readonly activeLightboxIndex = signal<number | null>(null);
 
+  readonly showCreateAlbumModal = signal(false);
+  readonly albumToDelete = signal<Album | null>(null);
+  readonly deletingAlbum = signal(false);
+
   ngOnInit() {
+    this.albumService.loadAlbums().subscribe();
     this.photoService.loadPhotos().subscribe();
   }
 
@@ -348,8 +457,41 @@ export class PortfolioComponent implements OnInit {
   filteredPhotos(): Photo[] {
     const list = this.photoService.photos();
     const cat = this.activeCategory();
-    if (cat === 'All') return list;
-    return list.filter(p => p.category === cat);
+    if (cat === 'All' || cat === 'Todos') return list;
+    return list.filter(p => p.category?.trim().toLowerCase() === cat.trim().toLowerCase());
+  }
+
+  confirmDeleteAlbum(album: Album, event: Event) {
+    event.stopPropagation();
+    this.albumToDelete.set(album);
+  }
+
+  executeDeleteAlbum() {
+    const album = this.albumToDelete();
+    if (!album) return;
+
+    this.deletingAlbum.set(true);
+    this.albumService.deleteAlbum(album.id).subscribe({
+      next: () => {
+        this.deletingAlbum.set(false);
+        this.toastService.success(`Álbum "${album.name}" eliminado correctamente`);
+        if (this.activeCategory().trim().toLowerCase() === album.name.trim().toLowerCase()) {
+          this.activeCategory.set('All');
+        }
+        this.albumToDelete.set(null);
+        this.photoService.loadPhotos().subscribe();
+      },
+      error: (err) => {
+        this.deletingAlbum.set(false);
+        console.error('Error al eliminar álbum', err);
+        this.toastService.error('Error al eliminar el álbum del servidor');
+      }
+    });
+  }
+
+  onAlbumCreated(album: Album) {
+    this.setCategory(album.name);
+    this.photoService.loadPhotos().subscribe();
   }
 
   openLightbox(index: number) {

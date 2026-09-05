@@ -104,10 +104,7 @@ import { ContactMessage } from '../../models/contact.model';
             </div>
 
             <div class="pt-8 mt-8 border-t border-neutral-100">
-              <div class="flex items-center gap-3">
-                <div class="aperture-icon text-black"></div>
-                <span class="text-xs font-semibold text-neutral-600">Representado internacionalmente en Japón, Europa y Sudamérica.</span>
-              </div>
+             
             </div>
           </div>
 

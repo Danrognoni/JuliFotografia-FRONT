@@ -113,11 +113,12 @@ import { Photo } from '../../models/photo.model';
                 required
                 class="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition bg-white"
               >
-                <option value="Tokyo Neon Pulse">Tokyo Neon Pulse</option>
-                <option value="Wilderness & Peaks">Wilderness & Peaks</option>
-                <option value="Silent Deserts">Silent Deserts</option>
-                <option value="Portraits of the Edge">Portraits of the Edge</option>
-                <option value="Untold Stories">Untold Stories</option>
+                @for (album of albumService.albums(); track album.id) {
+                  <option [value]="album.name">{{ album.name }}</option>
+                }
+                @if (formData.category && !isCategoryInAlbums(formData.category)) {
+                  <option [value]="formData.category">{{ formData.category }}</option>
+                }
               </select>
             </div>
           </div>
@@ -259,6 +260,7 @@ export class PhotoModalComponent implements OnInit {
   @Output() saved = new EventEmitter<Photo>();
 
   readonly photoService = inject(PhotoService);
+  readonly albumService = inject(AlbumService);
   private readonly toastService = inject(ToastService);
 
   selectedFile: File | null = null;
@@ -267,7 +269,7 @@ export class PhotoModalComponent implements OnInit {
 
   formData: Partial<Photo> = {
     title: '',
-    category: 'Tokyo Neon Pulse',
+    category: '',
     imageUrl: '',
     description: '',
     locationTag: '',
@@ -280,9 +282,22 @@ export class PhotoModalComponent implements OnInit {
   };
 
   ngOnInit() {
+    this.albumService.loadAlbums().subscribe(albums => {
+      if (!this.photoToEdit && albums && albums.length > 0 && !this.formData.category) {
+        this.formData.category = albums[0].name;
+      }
+    });
+
     if (this.photoToEdit) {
       this.formData = { ...this.photoToEdit };
+    } else if (this.albumService.albums().length > 0) {
+      this.formData.category = this.albumService.albums()[0].name;
     }
+  }
+
+  isCategoryInAlbums(cat?: string): boolean {
+    if (!cat) return false;
+    return this.albumService.albums().some(a => a.name.trim().toLowerCase() === cat.trim().toLowerCase());
   }
 
   onFileSelected(event: Event) {

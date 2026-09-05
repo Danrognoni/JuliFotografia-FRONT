@@ -16,8 +16,8 @@ import { AuthService } from '../../services/auth.service';
           alt="Dennis Wanderlight - The World, Unfiltered"
           class="w-full h-full object-cover object-center transform scale-105 transition-transform duration-1000 ease-out"
         />
-        <!-- Subtle gradient overlay to make typography pop -->
-        <div class="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/35"></div>
+        <!-- Subtle gradient overlay to make typography pop regardless of background photo -->
+        <div class="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black/65 pointer-events-none"></div>
       </div>
 
       <!-- Admin In-situ Edit Button -->
@@ -35,15 +35,15 @@ import { AuthService } from '../../services/auth.service';
         </div>
       }
 
-      <!-- Hero Content (Exact replica of Screenshot 1) -->
+      <!-- Hero Content -->
       <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full text-center flex flex-col items-center justify-center pt-16">
-        <!-- Massive Editorial Headline -->
-        <h1 class="text-white font-extrabold tracking-[-0.04em] text-5xl sm:text-7xl md:text-8xl lg:text-[7.5rem] leading-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.35)] select-none">
+        <!-- Fine Editorial Headline -->
+        <h1 class="text-white font-extralight tracking-widest sm:tracking-[0.18em] uppercase text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem] leading-tight drop-shadow-[0_2px_14px_rgba(0,0,0,0.85)] select-none max-w-5xl mx-auto break-words">
           {{ siteContentService.content().heroTitle || 'The World, Unfiltered' }}
         </h1>
 
         <!-- Subtitle -->
-        <p class="mt-4 sm:mt-6 text-white text-sm sm:text-base md:text-lg font-normal tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] max-w-xl">
+        <p class="mt-4 sm:mt-6 text-white/90 text-sm sm:text-base md:text-lg font-light tracking-wider drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)] max-w-2xl mx-auto">
           {{ siteContentService.content().heroSubtitle || 'Journeys captured beyond the postcard view' }}
         </p>
 
