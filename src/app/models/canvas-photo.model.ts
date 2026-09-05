@@ -8,6 +8,7 @@ export interface CanvasPhoto {
   width: number;   // Ancho en px
   height: number;  // Alto en px
   zIndex: number;  // Nivel de superposición
+  rotation?: number; // Rotación en grados (-180 a 180 o 0 a 360)
   orientation?: 'portrait' | 'landscape' | 'square';
 }
 
@@ -18,4 +19,5 @@ export interface PhotoLayoutPayload {
   width: number;
   height: number;
   zIndex: number;
+  rotation?: number;
 }

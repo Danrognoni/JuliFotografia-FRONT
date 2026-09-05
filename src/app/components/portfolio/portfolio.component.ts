@@ -2,6 +2,7 @@ import {
   Component,
   ElementRef,
   EventEmitter,
+  HostListener,
   OnInit,
   Output,
   ViewChild,
@@ -18,6 +19,13 @@ import { ToastService } from '../../services/toast.service';
 import { SiteContentService } from '../../services/site-content.service';
 import { Album } from '../../models/album.model';
 import { AlbumModalComponent } from '../album-modal/album-modal.component';
+import {
+  calculateResizeTransform,
+  calculateRotationAngle,
+  getRotatedCursor,
+  TransformHandle,
+  TransformRect
+} from '../../utils/canvas-transform.util';
 
 @Component({
   selector: 'app-portfolio',
@@ -149,7 +157,7 @@ import { AlbumModalComponent } from '../album-modal/album-modal.component';
                 <svg class="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span><strong>Modo Edición:</strong> Arrastra la barra superior o la tarjeta para moverla. Usa el botón circular naranja de la esquina inferior derecha para redimensionar el ancho.</span>
+                <span><strong>Modo Edición Canvas:</strong> Selecciona cualquier elemento para desplegar el Gizmo de transformación. Usa el manejador superior para rotar libremente y los 8 puntos para redimensionar y estirar ancho y alto.</span>
               </div>
               @if (pendingChanges()) {
                 <span class="text-[11px] font-bold text-amber-700 bg-amber-200/80 px-2 py-0.5 rounded-md">Cambios sin guardar</span>
@@ -167,12 +175,12 @@ import { AlbumModalComponent } from '../album-modal/album-modal.component';
             </div>
           }
 
-          <!-- ÁLBUMES (POSICIONAMIENTO ABSOLUTO + CDK DRAG + REDIMENSIONADO MANUAL) -->
+          <!-- ÁLBUMES (POSICIONAMIENTO ABSOLUTO + CDK DRAG + TRANSFORMACIONES AVANZADAS) -->
           @for (album of albumService.albums(); track album.id; let i = $index) {
             <div 
               cdkDrag
               cdkDragBoundary="#canvasContainer"
-              [cdkDragDisabled]="!isEditLayoutMode() || isResizing()"
+              [cdkDragDisabled]="!isEditLayoutMode() || isResizing() || isRotating()"
               (cdkDragEnded)="onDragEnded($event, album)"
               (click)="onAlbumClick(album, $event)"
               class="absolute select-none will-change-transform group album-item-container"
@@ -180,10 +188,12 @@ import { AlbumModalComponent } from '../album-modal/album-modal.component';
               [style.left.%]="album.xPos ?? 0"
               [style.top.%]="album.yPos ?? 0"
               [style.width.%]="album.width ?? 30"
+              [style.height.px]="album.height"
               [style.zIndex]="album.zIndex ?? 1"
               [ngClass]="{
-                'cursor-grab active:cursor-grabbing': isEditLayoutMode() && !isResizing(),
-                'cursor-pointer mix-blend-multiply opacity-95 hover:opacity-100 hover:mix-blend-normal hover:z-[60] transition-all duration-300': !isEditLayoutMode()
+                'cursor-grab active:cursor-grabbing': isEditLayoutMode() && !isResizing() && !isRotating(),
+                'cursor-pointer mix-blend-multiply opacity-95 hover:opacity-100 hover:mix-blend-normal hover:z-[60] transition-all duration-300': !isEditLayoutMode(),
+                'shadow-2xl': isEditLayoutMode() && selectedAlbumId() === album.id
               }"
             >
               <!-- Manija Superior Exclusiva de Arrastre (Modo Edición) -->
@@ -205,50 +215,134 @@ import { AlbumModalComponent } from '../album-modal/album-modal.component';
                 </div>
               }
 
-              <!-- Contenedor de la Imagen -->
+              <!-- ROTATED CONTAINER (ISOLATES ROTATION FROM POSITIONING) -->
               <div 
-                cdkDragHandle
-                class="relative w-full bg-neutral-100 transition-all duration-200"
-                [ngClass]="{
-                  'overflow-hidden ring-2 ring-amber-500 ring-offset-2 ring-offset-[#edf3f8] shadow-2xl rounded-sm cursor-grab active:cursor-grabbing': isEditLayoutMode(),
-                  'overflow-hidden shadow-sm hover:shadow-lg': !isEditLayoutMode(),
-                  'aspect-[4/3]': isEditLayoutMode() || i % 5 === 2,
-                  'aspect-[16/10]': !isEditLayoutMode() && i % 5 === 0,
-                  'aspect-[3/4]': !isEditLayoutMode() && i % 5 === 1,
-                  'aspect-[4/5]': !isEditLayoutMode() && i % 5 === 3,
-                  'aspect-[16/9]': !isEditLayoutMode() && i % 5 === 4
-                }"
+                class="w-full h-full relative"
+                [style.transform]="'rotate(' + (album.rotation || 0) + 'deg)'"
+                style="transform-origin: center center;"
               >
-                <img 
-                  [src]="albumService.getImageUrl(album.coverImageUrl || album.coverImage)" 
-                  [alt]="album.name"
-                  class="w-full h-full object-cover select-none pointer-events-none transition-transform duration-700 ease-out"
-                  [ngClass]="{
-                    'group-hover:scale-105': !isEditLayoutMode()
-                  }"
-                  loading="lazy"
-                  draggable="false"
-                />
-              </div>
-
-              <!-- Controlador Dedicado de Redimensionado en la Esquina Inferior Derecha -->
-              @if (isEditLayoutMode()) {
+                <!-- Contenedor de la Imagen -->
                 <div 
-                  (mousedown)="$event.stopPropagation(); startResize($event, album)"
-                  class="absolute -bottom-3.5 -right-3.5 z-50 w-7 h-7 bg-amber-500 hover:bg-amber-600 active:scale-95 text-white rounded-full flex items-center justify-center cursor-nwse-resize shadow-xl transition-all border-2 border-white ring-2 ring-amber-400/60 select-none group/resize"
-                  title="Arrastrar para redimensionar ancho (%)"
+                  cdkDragHandle
+                  class="relative w-full h-full bg-neutral-100 transition-all duration-200"
+                  [ngClass]="{
+                    'overflow-hidden ring-2 ring-amber-500 ring-offset-2 ring-offset-[#edf3f8] shadow-2xl rounded-sm cursor-grab active:cursor-grabbing': isEditLayoutMode(),
+                    'overflow-hidden shadow-sm hover:shadow-lg': !isEditLayoutMode(),
+                    'aspect-[4/3]': !album.height && (isEditLayoutMode() || i % 5 === 2),
+                    'aspect-[16/10]': !album.height && !isEditLayoutMode() && i % 5 === 0,
+                    'aspect-[3/4]': !album.height && !isEditLayoutMode() && i % 5 === 1,
+                    'aspect-[4/5]': !album.height && !isEditLayoutMode() && i % 5 === 3,
+                    'aspect-[16/9]': !album.height && !isEditLayoutMode() && i % 5 === 4
+                  }"
                 >
-                  <svg class="w-3.5 h-3.5 group-hover/resize:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 20l16-16m0 0h-6m6 0v6M4 20h6m-6 0v-6" />
-                  </svg>
+                  <img 
+                    [src]="albumService.getImageUrl(album.coverImageUrl || album.coverImage)" 
+                    [alt]="album.name"
+                    class="w-full h-full object-cover select-none pointer-events-none transition-transform duration-700 ease-out"
+                    [ngClass]="{
+                      'group-hover:scale-105': !isEditLayoutMode()
+                    }"
+                    loading="lazy"
+                    draggable="false"
+                  />
                 </div>
-              }
 
-              <!-- Etiqueta Flotante Amarilla Dennis Wanderlight -->
-              <div class="absolute -bottom-3 left-4 z-40 pointer-events-none">
-                <span class="inline-block bg-[#feea68] px-3 py-1 text-[10px] sm:text-xs font-semibold text-neutral-900 tracking-tight shadow-sm">
-                  {{ album.title || album.name }}
-                </span>
+                <!-- Etiqueta Flotante Amarilla Dennis Wanderlight -->
+                <div class="absolute -bottom-3 left-4 z-40 pointer-events-none">
+                  <span class="inline-block bg-[#feea68] px-3 py-1 text-[10px] sm:text-xs font-semibold text-neutral-900 tracking-tight shadow-sm">
+                    {{ album.title || album.name }}
+                  </span>
+                </div>
+
+                <!-- GIZMO CONTROLS (CUANDO ESTÁ SELECCIONADO EN MODO EDICIÓN) -->
+                @if (isEditLayoutMode() && selectedAlbumId() === album.id) {
+                  <!-- Active Bounding Box Border -->
+                  <div class="absolute inset-0 pointer-events-none border-2 border-amber-500 ring-1 ring-amber-400/40 rounded-sm"></div>
+
+                  <!-- 1. ROTATION HANDLE (TOP CONNECTOR STEM + ROTATION BUTTON) -->
+                  <div class="absolute -top-6 left-1/2 -translate-x-1/2 w-[1.5px] h-6 bg-amber-500 pointer-events-none"></div>
+                  <div
+                    class="rotate-handle"
+                    (pointerdown)="startRotate($event, album)"
+                    title="Arrastrar para rotar foto libremente (Shift para snap a 45°)"
+                  >
+                    <svg class="w-3.5 h-3.5 text-neutral-800 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </div>
+
+                  <!-- 2. FOUR CORNER RESIZE HANDLES -->
+                  <div
+                    class="resize-handle resize-corner resize-nw"
+                    [style.cursor]="getCursor('nw', album.rotation)"
+                    (pointerdown)="startResize($event, album, 'nw')"
+                    title="Redimensionar esquina superior izquierda"
+                  ></div>
+                  <div
+                    class="resize-handle resize-corner resize-ne"
+                    [style.cursor]="getCursor('ne', album.rotation)"
+                    (pointerdown)="startResize($event, album, 'ne')"
+                    title="Redimensionar esquina superior derecha"
+                  ></div>
+                  <div
+                    class="resize-handle resize-corner resize-se"
+                    [style.cursor]="getCursor('se', album.rotation)"
+                    (pointerdown)="startResize($event, album, 'se')"
+                    title="Redimensionar esquina inferior derecha"
+                  ></div>
+                  <div
+                    class="resize-handle resize-corner resize-sw"
+                    [style.cursor]="getCursor('sw', album.rotation)"
+                    (pointerdown)="startResize($event, album, 'sw')"
+                    title="Redimensionar esquina inferior izquierda"
+                  ></div>
+
+                  <!-- 3. FOUR MIDDLE EDGE HANDLES (STRETCH / COMPRESS) -->
+                  <!-- Top edge (Height stretch) -->
+                  <div
+                    class="resize-handle resize-edge resize-n"
+                    [style.cursor]="getCursor('n', album.rotation)"
+                    (pointerdown)="startResize($event, album, 'n')"
+                    title="Estirar / comprimir alto (superior)"
+                  ></div>
+                  <!-- Bottom edge (Height stretch) -->
+                  <div
+                    class="resize-handle resize-edge resize-s"
+                    [style.cursor]="getCursor('s', album.rotation)"
+                    (pointerdown)="startResize($event, album, 's')"
+                    title="Estirar / comprimir alto (inferior)"
+                  ></div>
+                  <!-- Left edge (Width stretch) -->
+                  <div
+                    class="resize-handle resize-edge resize-w"
+                    [style.cursor]="getCursor('w', album.rotation)"
+                    (pointerdown)="startResize($event, album, 'w')"
+                    title="Estirar / comprimir ancho (izquierdo)"
+                  ></div>
+                  <!-- Right edge (Width stretch) -->
+                  <div
+                    class="resize-handle resize-edge resize-e"
+                    [style.cursor]="getCursor('e', album.rotation)"
+                    (pointerdown)="startResize($event, album, 'e')"
+                    title="Estirar / comprimir ancho (derecho)"
+                  ></div>
+
+                  <!-- 4. FLOATING HUD BADGE (DIMENSIONS & ROTATION ANGLE) -->
+                  <div class="absolute -top-14 left-1/2 -translate-x-1/2 bg-neutral-900/95 text-white px-2.5 py-1 rounded-full text-[10px] font-mono tracking-wider shadow-xl z-50 whitespace-nowrap pointer-events-auto flex items-center gap-2 border border-white/10">
+                    <span>{{ Math.round(album.width || 30) }}% w</span>
+                    <span class="text-amber-400 font-bold">{{ Math.round(album.rotation || 0) }}°</span>
+                    @if (album.rotation && album.rotation !== 0) {
+                      <button
+                        type="button"
+                        (click)="resetRotation(album); $event.stopPropagation()"
+                        class="hover:text-amber-400 text-neutral-400 text-[9px] underline transition ml-0.5"
+                        title="Restablecer rotación a 0°"
+                      >
+                        0°
+                      </button>
+                    }
+                  </div>
+                }
               </div>
 
               <!-- Admin Controls flotantes (Modo Normal) -->
@@ -339,7 +433,121 @@ import { AlbumModalComponent } from '../album-modal/album-modal.component';
         />
       }
     </section>
-  `
+  `,
+  styles: [`
+    .rotate-handle {
+      position: absolute;
+      top: -36px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 24px;
+      height: 24px;
+      background-color: #ffffff;
+      border: 2px solid #171717;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+      cursor: grab;
+      z-index: 75;
+      transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .rotate-handle:hover {
+      transform: translateX(-50%) scale(1.18);
+      background-color: #feea68;
+      border-color: #f59e0b;
+    }
+
+    .rotate-handle:active {
+      cursor: grabbing;
+      transform: translateX(-50%) scale(1.05);
+    }
+
+    .resize-handle {
+      position: absolute;
+      background-color: #ffffff;
+      border: 2px solid #171717;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+      z-index: 70;
+      transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .resize-handle:hover {
+      background-color: #feea68;
+      border-color: #f59e0b;
+    }
+
+    /* Esquinas: circulares de 12px */
+    .resize-corner {
+      width: 12px;
+      height: 12px;
+      border-radius: 9999px;
+    }
+
+    .resize-corner:hover {
+      transform: scale(1.35);
+    }
+
+    .resize-nw { top: -6px; left: -6px; }
+    .resize-ne { top: -6px; right: -6px; }
+    .resize-se { bottom: -6px; right: -6px; }
+    .resize-sw { bottom: -6px; left: -6px; }
+
+    /* Puntos medios: forma de píldora estilizada para alto/ancho */
+    .resize-edge {
+      border-radius: 9999px;
+    }
+
+    .resize-n {
+      top: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 18px;
+      height: 7px;
+    }
+    .resize-n:hover {
+      transform: translateX(-50%) scale(1.25);
+    }
+
+    .resize-s {
+      bottom: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 18px;
+      height: 7px;
+    }
+    .resize-s:hover {
+      transform: translateX(-50%) scale(1.25);
+    }
+
+    .resize-e {
+      right: -5px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 7px;
+      height: 18px;
+    }
+    .resize-e:hover {
+      transform: translateY(-50%) scale(1.25);
+    }
+
+    .resize-w {
+      left: -5px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 7px;
+      height: 18px;
+    }
+    .resize-w:hover {
+      transform: translateY(-50%) scale(1.25);
+    }
+  `]
 })
 export class PortfolioComponent implements OnInit {
   @Output() openUpload = new EventEmitter<void>();
@@ -351,11 +559,15 @@ export class PortfolioComponent implements OnInit {
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
 
+  readonly Math = Math;
+
   // Estados del Modo Edición de Lienzo
   readonly isEditLayoutMode = signal<boolean>(false);
   readonly pendingChanges = signal<boolean>(false);
   readonly savingLayout = signal<boolean>(false);
   readonly isResizing = signal<boolean>(false);
+  readonly isRotating = signal<boolean>(false);
+  readonly selectedAlbumId = signal<string | null>(null);
 
   private highestZIndex = 20;
 
@@ -501,50 +713,176 @@ export class PortfolioComponent implements OnInit {
   }
 
   /**
-   * Redimensionado manual fluido escuchando mousemove y mouseup globales en document.
-   * Totalmente desacoplado de cdkDrag mediante stopPropagation().
+   * Obtiene el cursor CSS dinámico adaptado a la orientación rotada del elemento
    */
-  startResize(event: MouseEvent, album: Album) {
-    event.preventDefault();
+  getCursor(handle: TransformHandle, rotation?: number): string {
+    return getRotatedCursor(handle, rotation || 0);
+  }
+
+  /**
+   * Manejador de rotación circular libre con centro anclado y snapping opcional
+   */
+  startRotate(event: PointerEvent, album: Album): void {
     event.stopPropagation();
+    event.preventDefault();
 
-    if (!this.canvasContainer?.nativeElement) return;
-    const parentWidth = this.canvasContainer.nativeElement.clientWidth;
-    if (!parentWidth) return;
-
-    this.isResizing.set(true);
-    const startX = event.clientX;
-    const startWidth = album.width ?? 30;
-
-    // Traer al frente durante el redimensionado
+    this.isRotating.set(true);
+    this.selectedAlbumId.set(album.id);
     this.highestZIndex++;
     album.zIndex = this.highestZIndex;
 
-    const onMouseMove = (moveEvent: MouseEvent) => {
+    const targetHandle = event.target as HTMLElement;
+    try {
+      targetHandle.setPointerCapture(event.pointerId);
+    } catch {}
+
+    const itemElem = (event.target as HTMLElement).closest('.album-item-container') as HTMLElement;
+    if (!itemElem) return;
+    const itemRect = itemElem.getBoundingClientRect();
+    const centerX = itemRect.left + itemRect.width / 2;
+    const centerY = itemRect.top + itemRect.height / 2;
+
+    const onPointerMove = (moveEvent: PointerEvent) => {
       moveEvent.preventDefault();
-      const currentCanvasWidth = this.canvasContainer?.nativeElement?.clientWidth || parentWidth;
-      const deltaX = moveEvent.clientX - startX;
-      const deltaPercent = (deltaX / currentCanvasWidth) * 100;
+      const snap = moveEvent.shiftKey;
+      const angle = calculateRotationAngle(centerX, centerY, moveEvent.clientX, moveEvent.clientY, snap);
 
-      // Limitar entre 15% (mínimo) y 90% (máximo)
-      const calculatedWidth = startWidth + deltaPercent;
-      const newWidth = Math.min(90, Math.max(15, parseFloat(calculatedWidth.toFixed(2))));
-
-      album.width = newWidth;
+      album.rotation = angle;
       this.albumService.albums.update(list =>
-        list.map(a => (a.id === album.id ? { ...a, width: newWidth, zIndex: this.highestZIndex } : a))
+        list.map(a => (a.id === album.id ? { ...a, rotation: angle, zIndex: this.highestZIndex } : a))
       );
       this.pendingChanges.set(true);
     };
 
-    const onMouseUp = () => {
-      this.isResizing.set(false);
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
+    const onPointerUp = (upEvent: PointerEvent) => {
+      try {
+        targetHandle.releasePointerCapture(upEvent.pointerId);
+      } catch {}
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      setTimeout(() => {
+        this.isRotating.set(false);
+      }, 60);
     };
 
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+  }
+
+  /**
+   * Restablece la rotación a 0 grados
+   */
+  resetRotation(album: Album): void {
+    album.rotation = 0;
+    this.albumService.albums.update(list =>
+      list.map(a => (a.id === album.id ? { ...a, rotation: 0 } : a))
+    );
+    this.pendingChanges.set(true);
+  }
+
+  /**
+   * Redimensionado manual en 8 puntos proyectado al sistema local rotado.
+   * Totalmente desacoplado de cdkDrag.
+   */
+  startResize(event: PointerEvent, album: Album, handle: TransformHandle) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!this.canvasContainer?.nativeElement) return;
+    const parentRect = this.canvasContainer.nativeElement.getBoundingClientRect();
+    const parentWidth = parentRect.width;
+    const parentHeight = parentRect.height;
+    if (!parentWidth || !parentHeight) return;
+
+    this.isResizing.set(true);
+    this.selectedAlbumId.set(album.id);
+    this.highestZIndex++;
+    album.zIndex = this.highestZIndex;
+
+    const targetHandle = event.target as HTMLElement;
+    try {
+      targetHandle.setPointerCapture(event.pointerId);
+    } catch {}
+
+    const itemElem = (event.target as HTMLElement).closest('.album-item-container') as HTMLElement;
+    if (!itemElem) return;
+    const elemRect = itemElem.getBoundingClientRect();
+
+    const startX = event.clientX;
+    const startY = event.clientY;
+
+    const startPixelX = elemRect.left - parentRect.left;
+    const startPixelY = elemRect.top - parentRect.top;
+    const startPixelWidth = elemRect.width;
+    const startPixelHeight = elemRect.height;
+
+    const startState: TransformRect = {
+      x: startPixelX,
+      y: startPixelY,
+      width: startPixelWidth,
+      height: startPixelHeight,
+      rotation: album.rotation || 0
+    };
+
+    const onMouseMove = (moveEvent: PointerEvent) => {
+      moveEvent.preventDefault();
+      const dx = moveEvent.clientX - startX;
+      const dy = moveEvent.clientY - startY;
+
+      const transformed = calculateResizeTransform(
+        startState,
+        handle,
+        { dx, dy },
+        {
+          minWidth: 100,
+          minHeight: 80,
+          lockAspectRatio: moveEvent.shiftKey
+        }
+      );
+
+      const widthPercent = (transformed.width / parentWidth) * 100;
+      const xPercent = (transformed.x / parentWidth) * 100;
+      const yPercent = (transformed.y / parentHeight) * 100;
+
+      const clampedWidth = Math.min(95, Math.max(10, parseFloat(widthPercent.toFixed(2))));
+      const clampedX = Math.max(0, Math.min(100 - clampedWidth, parseFloat(xPercent.toFixed(2))));
+      const clampedY = Math.max(0, parseFloat(yPercent.toFixed(2)));
+
+      album.width = clampedWidth;
+      album.height = transformed.height;
+      album.xPos = clampedX;
+      album.yPos = clampedY;
+
+      this.albumService.albums.update(list =>
+        list.map(a =>
+          a.id === album.id
+            ? {
+                ...a,
+                width: clampedWidth,
+                height: transformed.height,
+                xPos: clampedX,
+                yPos: clampedY,
+                zIndex: this.highestZIndex
+              }
+            : a
+        )
+      );
+      this.pendingChanges.set(true);
+    };
+
+    const onMouseUp = (upEvent: PointerEvent) => {
+      try {
+        targetHandle.releasePointerCapture(upEvent.pointerId);
+      } catch {}
+      window.removeEventListener('pointermove', onMouseMove);
+      window.removeEventListener('pointerup', onMouseUp);
+      setTimeout(() => {
+        this.isResizing.set(false);
+      }, 60);
+    };
+
+    window.addEventListener('pointermove', onMouseMove);
+    window.addEventListener('pointerup', onMouseUp);
   }
 
   /**
@@ -558,6 +896,8 @@ export class PortfolioComponent implements OnInit {
       xPos: a.xPos,
       yPos: a.yPos,
       width: a.width,
+      height: a.height,
+      rotation: a.rotation,
       zIndex: a.zIndex
     }));
 
@@ -585,6 +925,7 @@ export class PortfolioComponent implements OnInit {
   onAlbumClick(album: Album, event: MouseEvent) {
     if (this.isEditLayoutMode()) {
       event.stopPropagation();
+      this.selectedAlbumId.set(album.id);
       this.highestZIndex++;
       album.zIndex = this.highestZIndex;
       this.albumService.albums.update(list =>
@@ -593,6 +934,19 @@ export class PortfolioComponent implements OnInit {
       return;
     }
     this.navigateToAlbum(album.id);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.isEditLayoutMode()) return;
+    const target = event.target as HTMLElement;
+    if (
+      !target.closest('.album-item-container') &&
+      !target.closest('.resize-handle') &&
+      !target.closest('.rotate-handle')
+    ) {
+      this.selectedAlbumId.set(null);
+    }
   }
 
   navigateToAlbum(id: string) {

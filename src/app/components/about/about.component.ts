@@ -39,22 +39,14 @@ import { AuthService } from '../../services/auth.service';
             </div>
 
             <!-- Floating Label Card -->
-            <div class="hidden sm:flex items-center gap-3 absolute -bottom-6 -right-4 bg-white px-5 py-3 rounded-lg shadow-xl border border-neutral-100">
-              <div class="aperture-icon text-black"></div>
-              <div class="text-left">
-                <span class="block text-xs font-bold text-neutral-900">
-                  {{ siteContentService.content().contactLocation || 'Tokyo · Patagonia · Worldwide' }}
-                </span>
-                <span class="block text-[10px] text-neutral-500 uppercase tracking-wider">Field Expeditions</span>
-              </div>
-            </div>
+           
           </div>
 
           <!-- Right Column: Bio & Artist Statement -->
           <div class="lg:col-span-7 flex flex-col justify-center">
             <!-- Kicker -->
             <span class="text-xs font-bold tracking-widest text-neutral-400 uppercase mb-3 block">
-              Behind The Lens
+              Detras del lente
             </span>
 
             <!-- Name / Title -->

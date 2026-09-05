@@ -11,6 +11,7 @@ export interface AlbumPhoto {
   width?: number;
   height?: number;
   zIndex?: number;
+  rotation?: number;
   createdAt?: string;
 }
 
@@ -28,6 +29,8 @@ export interface Album {
   xPos?: number;
   yPos?: number;
   width?: number;
+  height?: number;
+  rotation?: number;
   zIndex?: number;
   photos?: AlbumPhoto[];
   photoUrls?: string[];

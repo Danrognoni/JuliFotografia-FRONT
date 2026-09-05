@@ -24,7 +24,7 @@ export class AlbumService {
           if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
             const savedRaw = localStorage.getItem('portfolio_albums_layout');
             if (savedRaw) {
-              const savedLayout: { id: string; xPos?: number; yPos?: number; width?: number; zIndex?: number }[] = JSON.parse(savedRaw);
+              const savedLayout: { id: string; xPos?: number; yPos?: number; width?: number; height?: number; rotation?: number; zIndex?: number }[] = JSON.parse(savedRaw);
               mergedList = mergedList.map(item => {
                 const match = savedLayout.find(s => s.id === item.id);
                 if (match) {
@@ -33,6 +33,8 @@ export class AlbumService {
                     xPos: item.xPos != null ? item.xPos : match.xPos,
                     yPos: item.yPos != null ? item.yPos : match.yPos,
                     width: item.width != null ? item.width : match.width,
+                    height: item.height != null ? item.height : match.height,
+                    rotation: item.rotation != null ? item.rotation : match.rotation,
                     zIndex: item.zIndex != null ? item.zIndex : match.zIndex
                   };
                 }
@@ -185,11 +187,11 @@ export class AlbumService {
     return this.http.put<void>(`${environment.apiUrl}/albums/${albumId}/photos/reorder`, { items });
   }
 
-  updatePhotosLayout(layout: { id: string | number; x: number; y: number; width: number; height: number; zIndex: number }[]): Observable<void> {
+  updatePhotosLayout(layout: { id: string | number; x: number; y: number; width: number; height: number; zIndex: number; rotation?: number }[]): Observable<void> {
     return this.http.put<void>(`${environment.apiUrl}/admin/photos/layout`, layout);
   }
 
-  updateAlbumsLayout(layout: { id: string; xPos?: number; yPos?: number; width?: number; zIndex?: number }[]): Observable<any> {
+  updateAlbumsLayout(layout: { id: string; xPos?: number; yPos?: number; width?: number; height?: number; rotation?: number; zIndex?: number }[]): Observable<any> {
     // 1. Persistencia local inmediata en localStorage para máxima resiliencia
     try {
       if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
@@ -226,6 +228,8 @@ export class AlbumService {
             xPos: item.xPos,
             yPos: item.yPos,
             width: item.width,
+            height: item.height,
+            rotation: item.rotation,
             zIndex: item.zIndex
           };
 

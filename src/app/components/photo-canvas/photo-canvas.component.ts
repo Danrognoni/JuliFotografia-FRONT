@@ -15,8 +15,13 @@ import {
 import { CommonModule } from '@angular/common';
 import { CdkDrag, CdkDragEnd, CdkDragStart, DragDropModule } from '@angular/cdk/drag-drop';
 import { CanvasPhoto, PhotoLayoutPayload } from '../../models/canvas-photo.model';
-
-type ResizeHandle = 'nw' | 'ne' | 'se' | 'sw';
+import {
+  calculateResizeTransform,
+  calculateRotationAngle,
+  getRotatedCursor,
+  TransformHandle,
+  TransformRect
+} from '../../utils/canvas-transform.util';
 
 @Component({
   selector: 'app-photo-canvas',
@@ -103,91 +108,144 @@ type ResizeHandle = 'nw' | 'ne' | 'se' | 'sw';
           <div
             cdkDrag
             cdkDragBoundary=".canvas-container"
-            [cdkDragDisabled]="!isEditMode() || isResizing()"
+            [cdkDragDisabled]="!isEditMode() || isResizing() || isRotating()"
             [cdkDragFreeDragPosition]="{ x: photo.x, y: photo.y }"
             (cdkDragStarted)="onDragStarted(photo)"
             (cdkDragEnded)="onDragEnded(photo, $event)"
             (click)="onPhotoClick(photo, $event)"
             class="canvas-photo-item absolute left-0 top-0 select-none group will-change-transform"
             [ngClass]="{
-              'cursor-grab active:cursor-grabbing': isEditMode() && !isResizing(),
+              'cursor-grab active:cursor-grabbing': isEditMode() && !isResizing() && !isRotating(),
               'cursor-pointer': !isEditMode(),
-              'ring-2 ring-amber-500 shadow-2xl': isEditMode() && selectedPhotoId() === photo.id,
+              'shadow-2xl': isEditMode() && selectedPhotoId() === photo.id,
               'hover:ring-1 hover:ring-black/30': isEditMode() && selectedPhotoId() !== photo.id
             }"
             [style.width.px]="photo.width"
             [style.height.px]="photo.height"
             [style.zIndex]="photo.zIndex"
           >
-            <!-- PHOTO WRAPPER WITH mix-blend-mode: multiply -->
-            <div class="w-full h-full relative overflow-hidden mix-blend-multiply bg-neutral-100 transition-shadow duration-300">
-              <img
-                [src]="photo.url"
-                [alt]="photo.title || photo.caption || 'Fotografía'"
-                class="w-full h-full object-cover pointer-events-none select-none transition-transform duration-700 ease-out"
-                [ngClass]="!isEditMode() ? 'group-hover:scale-105' : ''"
-                loading="lazy"
-                draggable="false"
-              />
+            <!-- ROTATED CONTAINER (ISOLATES ROTATION MATRIX FROM CDK DRAG POSITION) -->
+            <div 
+              class="w-full h-full relative"
+              [style.transform]="'rotate(' + (photo.rotation || 0) + 'deg)'"
+              style="transform-origin: center center;"
+            >
+              <!-- PHOTO WRAPPER WITH mix-blend-mode: multiply -->
+              <div class="w-full h-full relative overflow-hidden mix-blend-multiply bg-neutral-100 transition-shadow duration-300">
+                <img
+                  [src]="photo.url"
+                  [alt]="photo.title || photo.caption || 'Fotografía'"
+                  class="w-full h-full object-cover pointer-events-none select-none transition-transform duration-700 ease-out"
+                  [ngClass]="!isEditMode() ? 'group-hover:scale-105' : ''"
+                  loading="lazy"
+                  draggable="false"
+                />
 
-              <!-- Subtle dark film overlay on hover in view mode -->
-              @if (!isEditMode()) {
-                <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 pointer-events-none"></div>
-              }
-            </div>
-
-            <!-- EDITORIAL CAPTION STICKER (Dennis Wanderlight Signature Yellow Tag) -->
-            @if (photo.caption || photo.title) {
-              <div class="absolute -bottom-3 left-4 z-40 pointer-events-none">
-                <span class="inline-block bg-[#feea68] px-2.5 py-0.5 text-[10px] sm:text-[11px] font-semibold text-neutral-900 tracking-tight shadow-sm">
-                  {{ photo.caption || photo.title }}
-                </span>
+                <!-- Subtle dark film overlay on hover in view mode -->
+                @if (!isEditMode()) {
+                  <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 pointer-events-none"></div>
+                }
               </div>
-            }
 
-            <!-- EDIT MODE CONTROLS: RESIZE HANDLES & DIMENSION BADGE -->
-            @if (isEditMode()) {
-              <!-- Selection indicator border -->
-              <div class="absolute inset-0 pointer-events-none border border-black/20"
-                   [ngClass]="selectedPhotoId() === photo.id ? 'border-amber-500' : ''"></div>
-
-              <!-- Top Left Handle -->
-              <div
-                class="resize-handle resize-nw"
-                (pointerdown)="startResize($event, photo, 'nw')"
-                title="Redimensionar esquina superior izquierda"
-              ></div>
-
-              <!-- Top Right Handle -->
-              <div
-                class="resize-handle resize-ne"
-                (pointerdown)="startResize($event, photo, 'ne')"
-                title="Redimensionar esquina superior derecha"
-              ></div>
-
-              <!-- Bottom Right Handle -->
-              <div
-                class="resize-handle resize-se"
-                (pointerdown)="startResize($event, photo, 'se')"
-                title="Redimensionar esquina inferior derecha"
-              ></div>
-
-              <!-- Bottom Left Handle -->
-              <div
-                class="resize-handle resize-sw"
-                (pointerdown)="startResize($event, photo, 'sw')"
-                title="Redimensionar esquina inferior izquierda"
-              ></div>
-
-              <!-- Floating Dimension / Position Badge (on selected or hover) -->
-              @if (selectedPhotoId() === photo.id || activeResizingPhotoId() === photo.id) {
-                <div class="absolute -top-7 left-1/2 -translate-x-1/2 bg-neutral-900/90 text-white px-2 py-0.5 rounded text-[10px] font-mono tracking-wider shadow z-50 whitespace-nowrap pointer-events-none">
-                  {{ Math.round(photo.width) }} × {{ Math.round(photo.height) }} px · z: {{ photo.zIndex }}
+              <!-- EDITORIAL CAPTION STICKER (Dennis Wanderlight Signature Yellow Tag) -->
+              @if (photo.caption || photo.title) {
+                <div class="absolute -bottom-3 left-4 z-40 pointer-events-none">
+                  <span class="inline-block bg-[#feea68] px-2.5 py-0.5 text-[10px] sm:text-[11px] font-semibold text-neutral-900 tracking-tight shadow-sm">
+                    {{ photo.caption || photo.title }}
+                  </span>
                 </div>
               }
 
-              <!-- Layering quick controls (bring forward / send back) -->
-              @if (selectedPhotoId() === photo.id) {
+              <!-- EDIT MODE CONTROLS: GIZMO BOUNDING BOX & HANDLES -->
+              @if (isEditMode() && selectedPhotoId() === photo.id) {
+                <!-- Active Bounding Box Border -->
+                <div class="absolute inset-0 pointer-events-none border-2 border-amber-500 ring-1 ring-amber-400/40 rounded-sm"></div>
+
+                <!-- 1. ROTATION HANDLE (TOP CONNECTOR STEM + ROTATION BUTTON) -->
+                <div class="absolute -top-6 left-1/2 -translate-x-1/2 w-[1.5px] h-6 bg-amber-500 pointer-events-none"></div>
+                <div
+                  class="rotate-handle"
+                  (pointerdown)="startRotate($event, photo)"
+                  title="Arrastrar para rotar foto libremente (Shift para snap a 45°)"
+                >
+                  <svg class="w-3.5 h-3.5 text-neutral-800 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </div>
+
+                <!-- 2. FOUR CORNER RESIZE HANDLES -->
+                <div
+                  class="resize-handle resize-corner resize-nw"
+                  [style.cursor]="getCursor('nw', photo.rotation)"
+                  (pointerdown)="startResize($event, photo, 'nw')"
+                  title="Redimensionar esquina superior izquierda"
+                ></div>
+                <div
+                  class="resize-handle resize-corner resize-ne"
+                  [style.cursor]="getCursor('ne', photo.rotation)"
+                  (pointerdown)="startResize($event, photo, 'ne')"
+                  title="Redimensionar esquina superior derecha"
+                ></div>
+                <div
+                  class="resize-handle resize-corner resize-se"
+                  [style.cursor]="getCursor('se', photo.rotation)"
+                  (pointerdown)="startResize($event, photo, 'se')"
+                  title="Redimensionar esquina inferior derecha"
+                ></div>
+                <div
+                  class="resize-handle resize-corner resize-sw"
+                  [style.cursor]="getCursor('sw', photo.rotation)"
+                  (pointerdown)="startResize($event, photo, 'sw')"
+                  title="Redimensionar esquina inferior izquierda"
+                ></div>
+
+                <!-- 3. FOUR MIDDLE EDGE HANDLES (STRETCH / COMPRESS) -->
+                <!-- Top edge (Height stretch) -->
+                <div
+                  class="resize-handle resize-edge resize-n"
+                  [style.cursor]="getCursor('n', photo.rotation)"
+                  (pointerdown)="startResize($event, photo, 'n')"
+                  title="Estirar / comprimir alto (superior)"
+                ></div>
+                <!-- Bottom edge (Height stretch) -->
+                <div
+                  class="resize-handle resize-edge resize-s"
+                  [style.cursor]="getCursor('s', photo.rotation)"
+                  (pointerdown)="startResize($event, photo, 's')"
+                  title="Estirar / comprimir alto (inferior)"
+                ></div>
+                <!-- Left edge (Width stretch) -->
+                <div
+                  class="resize-handle resize-edge resize-w"
+                  [style.cursor]="getCursor('w', photo.rotation)"
+                  (pointerdown)="startResize($event, photo, 'w')"
+                  title="Estirar / comprimir ancho (izquierdo)"
+                ></div>
+                <!-- Right edge (Width stretch) -->
+                <div
+                  class="resize-handle resize-edge resize-e"
+                  [style.cursor]="getCursor('e', photo.rotation)"
+                  (pointerdown)="startResize($event, photo, 'e')"
+                  title="Estirar / comprimir ancho (derecho)"
+                ></div>
+
+                <!-- 4. FLOATING HUD BADGE (DIMENSIONS & ROTATION ANGLE) -->
+                <div class="absolute -top-14 left-1/2 -translate-x-1/2 bg-neutral-900/95 text-white px-2.5 py-1 rounded-full text-[10px] font-mono tracking-wider shadow-xl z-50 whitespace-nowrap pointer-events-auto flex items-center gap-2 border border-white/10">
+                  <span>{{ Math.round(photo.width) }} × {{ Math.round(photo.height) }} px</span>
+                  <span class="text-amber-400 font-bold">{{ Math.round(photo.rotation || 0) }}°</span>
+                  @if (photo.rotation && photo.rotation !== 0) {
+                    <button
+                      type="button"
+                      (click)="resetRotation(photo); $event.stopPropagation()"
+                      class="hover:text-amber-400 text-neutral-400 text-[9px] underline transition ml-0.5"
+                      title="Restablecer rotación a 0°"
+                    >
+                      0°
+                    </button>
+                  }
+                </div>
+
+                <!-- Layering quick controls (bring forward / send back) -->
                 <div class="absolute top-2 right-2 z-50 flex items-center gap-1 bg-white/95 backdrop-blur shadow-md rounded-lg p-1">
                   <button
                     type="button"
@@ -211,7 +269,7 @@ type ResizeHandle = 'nw' | 'ne' | 'se' | 'sw';
                   </button>
                 </div>
               }
-            }
+            </div>
           </div>
         }
       </div>
@@ -272,46 +330,117 @@ type ResizeHandle = 'nw' | 'ne' | 'se' | 'sw';
         linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
     }
 
+    .rotate-handle {
+      position: absolute;
+      top: -36px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 24px;
+      height: 24px;
+      background-color: #ffffff;
+      border: 2px solid #171717;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+      cursor: grab;
+      z-index: 75;
+      transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .rotate-handle:hover {
+      transform: translateX(-50%) scale(1.18);
+      background-color: #feea68;
+      border-color: #f59e0b;
+    }
+
+    .rotate-handle:active {
+      cursor: grabbing;
+      transform: translateX(-50%) scale(1.05);
+    }
+
     .resize-handle {
       position: absolute;
-      width: 14px;
-      height: 14px;
       background-color: #ffffff;
-      border: 2.5px solid #171717;
-      border-radius: 9999px;
+      border: 2px solid #171717;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
-      z-index: 60;
-      transition: transform 0.15s ease, background-color 0.15s ease;
+      z-index: 70;
+      transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+      touch-action: none;
+      user-select: none;
     }
 
     .resize-handle:hover {
-      transform: scale(1.35);
       background-color: #feea68;
-      border-color: #000000;
+      border-color: #f59e0b;
     }
 
-    .resize-nw {
-      top: -7px;
-      left: -7px;
-      cursor: nwse-resize;
+    /* Esquinas: circulares de 12px */
+    .resize-corner {
+      width: 12px;
+      height: 12px;
+      border-radius: 9999px;
     }
 
-    .resize-ne {
-      top: -7px;
-      right: -7px;
-      cursor: nesw-resize;
+    .resize-corner:hover {
+      transform: scale(1.35);
     }
 
-    .resize-se {
-      bottom: -7px;
-      right: -7px;
-      cursor: nwse-resize;
+    .resize-nw { top: -6px; left: -6px; }
+    .resize-ne { top: -6px; right: -6px; }
+    .resize-se { bottom: -6px; right: -6px; }
+    .resize-sw { bottom: -6px; left: -6px; }
+
+    /* Puntos medios: forma de píldora estilizada para alto/ancho */
+    .resize-edge {
+      border-radius: 9999px;
     }
 
-    .resize-sw {
-      bottom: -7px;
-      left: -7px;
-      cursor: nesw-resize;
+    .resize-n {
+      top: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 18px;
+      height: 7px;
+    }
+    .resize-n:hover {
+      transform: translateX(-50%) scale(1.25);
+    }
+
+    .resize-s {
+      bottom: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 18px;
+      height: 7px;
+    }
+    .resize-s:hover {
+      transform: translateX(-50%) scale(1.25);
+    }
+
+    .resize-e {
+      right: -5px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 7px;
+      height: 18px;
+    }
+    .resize-e:hover {
+      transform: translateY(-50%) scale(1.25);
+    }
+
+    .resize-w {
+      left: -5px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 7px;
+      height: 18px;
+    }
+    .resize-w:hover {
+      transform: translateY(-50%) scale(1.25);
     }
 
     @keyframes bounceSubtle {
@@ -342,6 +471,7 @@ export class PhotoCanvasComponent implements OnInit, OnChanges {
   readonly isEditMode = signal<boolean>(false);
   readonly isSaving = signal<boolean>(false);
   readonly isResizing = signal<boolean>(false);
+  readonly isRotating = signal<boolean>(false);
   readonly selectedPhotoId = signal<string | number | null>(null);
   readonly activeResizingPhotoId = signal<string | number | null>(null);
   readonly hasUnsavedChanges = signal<boolean>(false);
@@ -399,6 +529,7 @@ export class PhotoCanvasComponent implements OnInit, OnChanges {
         y: p.y || 0,
         width: p.width && p.width >= this.minWidth ? p.width : 420,
         height: p.height && p.height >= this.minHeight ? p.height : (p.orientation === 'portrait' ? 520 : 320),
+        rotation: p.rotation || 0,
         zIndex
       };
     });
@@ -437,6 +568,7 @@ export class PhotoCanvasComponent implements OnInit, OnChanges {
       y: Math.max(20, y),
       width,
       height,
+      rotation: photo.rotation || 0,
       zIndex: index + 1
     };
   }
@@ -505,9 +637,75 @@ export class PhotoCanvasComponent implements OnInit, OnChanges {
   }
 
   /**
-   * Pointer Events Corner Resizing Controller
+   * Obtiene el cursor CSS dinámico adaptado a la orientación rotada del elemento
    */
-  startResize(event: PointerEvent, photo: CanvasPhoto, handle: ResizeHandle): void {
+  getCursor(handle: TransformHandle, rotation?: number): string {
+    return getRotatedCursor(handle, rotation || 0);
+  }
+
+  /**
+   * Manejador de rotación circular libre con centro anclado y snapping opcional
+   */
+  startRotate(event: PointerEvent, photo: CanvasPhoto): void {
+    event.stopPropagation();
+    event.preventDefault();
+
+    this.isRotating.set(true);
+    this.selectedPhotoId.set(photo.id);
+    this.bringToFront(photo);
+
+    const targetHandle = event.target as HTMLElement;
+    try {
+      targetHandle.setPointerCapture(event.pointerId);
+    } catch {}
+
+    if (!this.canvasContainerRef) return;
+    const containerRect = this.canvasContainerRef.nativeElement.getBoundingClientRect();
+    const centerX = containerRect.left + photo.x + photo.width / 2;
+    const centerY = containerRect.top + photo.y + photo.height / 2;
+
+    const onPointerMove = (moveEvent: PointerEvent) => {
+      moveEvent.preventDefault();
+      const snap = moveEvent.shiftKey;
+      const angle = calculateRotationAngle(centerX, centerY, moveEvent.clientX, moveEvent.clientY, snap);
+
+      photo.rotation = angle;
+      this.photosList.update(list => list.map(p => (p.id === photo.id ? { ...photo } : p)));
+      this.hasUnsavedChanges.set(true);
+    };
+
+    const onPointerUp = (upEvent: PointerEvent) => {
+      try {
+        targetHandle.releasePointerCapture(upEvent.pointerId);
+      } catch {}
+
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+
+      this.hasUnsavedChanges.set(true);
+      setTimeout(() => {
+        this.isRotating.set(false);
+      }, 60);
+    };
+
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+  }
+
+  /**
+   * Restablece la rotación a 0 grados
+   */
+  resetRotation(photo: CanvasPhoto): void {
+    photo.rotation = 0;
+    this.photosList.update(list => list.map(p => (p.id === photo.id ? { ...photo } : p)));
+    this.hasUnsavedChanges.set(true);
+  }
+
+  /**
+   * Controlador de Redimensionado en 8 Puntos (Esquinas y Puntos Medios)
+   * Proyecta el desplazamiento al sistema de coordenadas local rotado del elemento.
+   */
+  startResize(event: PointerEvent, photo: CanvasPhoto, handle: TransformHandle): void {
     event.stopPropagation();
     event.preventDefault();
 
@@ -517,56 +715,43 @@ export class PhotoCanvasComponent implements OnInit, OnChanges {
     this.bringToFront(photo);
 
     const targetHandle = event.target as HTMLElement;
-    targetHandle.setPointerCapture(event.pointerId);
+    try {
+      targetHandle.setPointerCapture(event.pointerId);
+    } catch {}
 
     const startX = event.clientX;
     const startY = event.clientY;
-    const initialX = photo.x;
-    const initialY = photo.y;
-    const initialWidth = photo.width;
-    const initialHeight = photo.height;
+    const startState: TransformRect = {
+      x: photo.x,
+      y: photo.y,
+      width: photo.width,
+      height: photo.height,
+      rotation: photo.rotation || 0
+    };
 
     const onPointerMove = (moveEvent: PointerEvent) => {
+      moveEvent.preventDefault();
       const dx = moveEvent.clientX - startX;
       const dy = moveEvent.clientY - startY;
 
-      let newWidth = initialWidth;
-      let newHeight = initialHeight;
-      let newX = initialX;
-      let newY = initialY;
+      const transformed = calculateResizeTransform(
+        startState,
+        handle,
+        { dx, dy },
+        {
+          minWidth: this.minWidth,
+          minHeight: this.minHeight,
+          lockAspectRatio: moveEvent.shiftKey
+        }
+      );
 
-      switch (handle) {
-        case 'se':
-          newWidth = Math.max(this.minWidth, Math.round(initialWidth + dx));
-          newHeight = Math.max(this.minHeight, Math.round(initialHeight + dy));
-          break;
-
-        case 'sw':
-          newWidth = Math.max(this.minWidth, Math.round(initialWidth - dx));
-          newX = Math.max(0, initialX + (initialWidth - newWidth));
-          newHeight = Math.max(this.minHeight, Math.round(initialHeight + dy));
-          break;
-
-        case 'ne':
-          newWidth = Math.max(this.minWidth, Math.round(initialWidth + dx));
-          newHeight = Math.max(this.minHeight, Math.round(initialHeight - dy));
-          newY = Math.max(0, initialY + (initialHeight - newHeight));
-          break;
-
-        case 'nw':
-          newWidth = Math.max(this.minWidth, Math.round(initialWidth - dx));
-          newHeight = Math.max(this.minHeight, Math.round(initialHeight - dy));
-          newX = Math.max(0, initialX + (initialWidth - newWidth));
-          newY = Math.max(0, initialY + (initialHeight - newHeight));
-          break;
-      }
-
-      photo.width = newWidth;
-      photo.height = newHeight;
-      photo.x = newX;
-      photo.y = newY;
+      photo.width = transformed.width;
+      photo.height = transformed.height;
+      photo.x = transformed.x;
+      photo.y = transformed.y;
 
       this.photosList.update(list => list.map(p => (p.id === photo.id ? { ...photo } : p)));
+      this.hasUnsavedChanges.set(true);
     };
 
     const onPointerUp = (upEvent: PointerEvent) => {
@@ -580,7 +765,7 @@ export class PhotoCanvasComponent implements OnInit, OnChanges {
       this.hasUnsavedChanges.set(true);
       this.activeResizingPhotoId.set(null);
 
-      // Brief timeout to prevent drag-trigger on pointerup
+      // Breve retardo para evitar que el puntero dispare drag por error al soltarse
       setTimeout(() => {
         this.isResizing.set(false);
       }, 60);
@@ -607,7 +792,8 @@ export class PhotoCanvasComponent implements OnInit, OnChanges {
       y: Math.round(p.y),
       width: Math.round(p.width),
       height: Math.round(p.height),
-      zIndex: p.zIndex || 1
+      zIndex: p.zIndex || 1,
+      rotation: Math.round(p.rotation || 0)
     }));
 
     this.saveLayout.emit(payload);
@@ -642,7 +828,11 @@ export class PhotoCanvasComponent implements OnInit, OnChanges {
   onDocumentClick(event: MouseEvent): void {
     if (!this.isEditMode()) return;
     const target = event.target as HTMLElement;
-    if (!target.closest('.canvas-photo-item') && !target.closest('.resize-handle')) {
+    if (
+      !target.closest('.canvas-photo-item') &&
+      !target.closest('.resize-handle') &&
+      !target.closest('.rotate-handle')
+    ) {
       this.selectedPhotoId.set(null);
     }
   }

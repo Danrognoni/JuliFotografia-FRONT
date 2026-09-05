@@ -73,11 +73,14 @@ describe('PhotoCanvasComponent', () => {
     expect(component.hasUnsavedChanges()).toBe(true);
   });
 
-  it('should emit saveLayout payload with consolidated coordinates', () => {
+  it('should emit saveLayout payload with consolidated coordinates and rotation', () => {
     let emittedPayload: any = null;
     component.saveLayout.subscribe(payload => {
       emittedPayload = payload;
     });
+
+    const photo = component.photosList()[0];
+    photo.rotation = 45;
 
     component.onSaveLayout();
     expect(emittedPayload).toBeTruthy();
@@ -87,6 +90,7 @@ describe('PhotoCanvasComponent', () => {
     expect(emittedPayload[0].y).toBe(120);
     expect(emittedPayload[0].width).toBe(400);
     expect(emittedPayload[0].height).toBe(500);
+    expect(emittedPayload[0].rotation).toBe(45);
     expect(component.isSaving()).toBe(true);
   });
 
@@ -95,12 +99,29 @@ describe('PhotoCanvasComponent', () => {
     const photo = component.photosList()[0];
     photo.x = 999;
     photo.y = 888;
+    photo.rotation = 35;
     component.photosList.update(list => [...list]);
     component.hasUnsavedChanges.set(true);
 
     component.onDiscardChanges();
     expect(component.photosList()[0].x).toBe(100);
     expect(component.photosList()[0].y).toBe(120);
+    expect(component.photosList()[0].rotation).toBe(0);
     expect(component.hasUnsavedChanges()).toBe(false);
+  });
+
+  it('should reset rotation to 0 when resetRotation is called', () => {
+    const photo = component.photosList()[0];
+    photo.rotation = 90;
+    component.resetRotation(photo);
+    expect(photo.rotation).toBe(0);
+    expect(component.hasUnsavedChanges()).toBe(true);
+  });
+
+  it('should return appropriate dynamic cursors', () => {
+    expect(component.getCursor('rot')).toBe('grab');
+    expect(component.getCursor('n', 0)).toBe('ns-resize');
+    expect(component.getCursor('n', 90)).toBe('ew-resize');
+    expect(component.getCursor('e', 0)).toBe('ew-resize');
   });
 });
