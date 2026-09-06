@@ -17,12 +17,12 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
       <div class="max-w-7xl mx-auto px-4 sm:px-8">
         <!-- Admin Edit & Inbox Bar -->
         @if (authService.isAdmin()) {
-          <div class="flex items-center justify-end gap-3 mb-8">
+          <div class="flex flex-wrap items-center justify-end gap-3 mb-8">
             <button 
               (click)="openInbox.emit()"
-              class="flex items-center gap-2 bg-neutral-900 hover:bg-black text-white px-4 py-2 rounded-full text-xs font-bold shadow transition"
+              class="flex items-center gap-2 bg-neutral-900 hover:bg-black text-white px-4 py-2.5 rounded-full text-xs font-bold shadow transition min-h-[48px] touch-target-48"
             >
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
               <span>Ver Mensajes Recibidos</span>
@@ -30,9 +30,9 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
 
             <button 
               (click)="editContact.emit()"
-              class="flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-black px-3.5 py-2 rounded-full text-xs font-bold shadow transition transform hover:scale-105"
+              class="flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-black px-4 py-2.5 rounded-full text-xs font-bold shadow transition transform hover:scale-105 min-h-[48px] touch-target-48"
             >
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
               <span>Editar Datos de Contacto</span>
@@ -138,7 +138,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
                     name="name" 
                     required 
                     placeholder="Tu nombre"
-                    class="w-full px-4 py-3 min-h-[44px] rounded-lg border border-neutral-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
+                    class="w-full px-4 py-3 min-h-[48px] rounded-lg border border-neutral-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition touch-target-48"
                   />
                 </div>
 
@@ -150,7 +150,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
                     name="email" 
                     required 
                     placeholder="tu@email.com"
-                    class="w-full px-4 py-3 min-h-[44px] rounded-lg border border-neutral-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
+                    class="w-full px-4 py-3 min-h-[48px] rounded-lg border border-neutral-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition touch-target-48"
                   />
                 </div>
               </div>
@@ -162,7 +162,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
                   [(ngModel)]="formData.subject" 
                   name="subject" 
                   placeholder="Ej. Comisión editorial, Copia Fine Art o Expedición"
-                  class="w-full px-4 py-3 min-h-[44px] rounded-lg border border-neutral-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
+                  class="w-full px-4 py-3 min-h-[48px] rounded-lg border border-neutral-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition touch-target-48"
                 />
               </div>
 
@@ -181,7 +181,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
               <button 
                 type="submit" 
                 [disabled]="submitting()"
-                class="w-full sm:w-auto px-8 py-3.5 min-h-[48px] bg-black hover:bg-neutral-800 text-white text-xs font-bold uppercase tracking-widest rounded-full transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg active:scale-[0.99]"
+                class="w-full sm:w-auto px-8 py-3.5 min-h-[48px] bg-black hover:bg-neutral-800 text-white text-xs font-bold uppercase tracking-widest rounded-full transition disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg active:scale-[0.99] touch-target-48"
               >
                 @if (submitting()) {
                   <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">

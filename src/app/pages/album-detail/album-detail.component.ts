@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed, ViewChild, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -10,6 +10,7 @@ import { Album, AlbumPhoto } from '../../models/album.model';
 import { AlbumModalComponent } from '../../components/album-modal/album-modal.component';
 import { PhotoCanvasComponent } from '../../components/photo-canvas/photo-canvas.component';
 import { CanvasPhoto, PhotoLayoutPayload } from '../../models/canvas-photo.model';
+import { compressImages, formatBytes } from '../../utils/image-compression.util';
 
 @Component({
   selector: 'app-album-detail',
@@ -180,79 +181,124 @@ import { CanvasPhoto, PhotoLayoutPayload } from '../../models/canvas-photo.model
         }
       </main>
 
-      <!-- FULLSCREEN LIGHTBOX VISOR -->
+      <!-- FULLSCREEN LIGHTBOX VISOR WITH SWIPE GESTURES & ZOOM -->
       @if (activeLightboxIndex() !== null && currentLightboxPhoto()) {
         <div 
-          class="fixed inset-0 z-[9995] bg-black/95 backdrop-blur-md flex flex-col items-center justify-between p-4 md:p-8 animate-fadeIn select-none"
+          class="fixed inset-0 z-[9995] bg-black/95 backdrop-blur-md flex flex-col items-center justify-between p-3 sm:p-6 md:p-8 animate-fadeIn select-none touch-none"
           (click)="closeLightbox()"
         >
-          <!-- Admin Delete Button in Lightbox -->
-          @if (authService.isAdmin()) {
+          <!-- Header Controls Toolbar with >= 48px touch targets -->
+          <div class="w-full flex items-center justify-between px-2 py-2 z-50 pointer-events-auto" (click)="$event.stopPropagation()">
+            <!-- Zoom toggle button -->
             <button 
-              (click)="deleteCurrentLightboxPhoto($event)"
-              class="absolute top-5 right-16 text-white/70 hover:text-red-400 p-2 rounded-full hover:bg-white/10 transition z-50 flex items-center gap-1.5 text-xs font-semibold"
-              aria-label="Eliminar fotografía"
-              title="Eliminar fotografía del álbum"
+              (click)="toggleZoom($event)"
+              class="touch-target-48 min-w-[48px] min-h-[48px] text-white/80 hover:text-white p-3 rounded-full hover:bg-white/10 transition flex items-center gap-1.5 text-xs font-semibold"
+              [title]="zoomLevel() > 1 ? 'Restablecer Zoom (1x)' : 'Ampliar Imagen (2x)'"
+              aria-label="Alternar Zoom"
             >
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                @if (zoomLevel() > 1) {
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+                } @else {
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                }
               </svg>
-              <span class="hidden sm:inline">Eliminar Foto</span>
+              <span class="hidden sm:inline">{{ zoomLevel() > 1 ? '1x' : 'Zoom' }}</span>
             </button>
-          }
 
-          <!-- Close Button -->
-          <button 
-            (click)="closeLightbox(); $event.stopPropagation()"
-            class="absolute top-5 right-5 text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition z-50"
-            aria-label="Cerrar visor"
-          >
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+            <!-- Center Swipe Hint on Mobile -->
+            <div class="text-[11px] text-white/50 tracking-wider font-mono sm:hidden flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+              <span>Desliza para navegar</span>
+            </div>
 
-          <!-- Prev Button -->
+            <!-- Right actions -->
+            <div class="flex items-center gap-1">
+              @if (authService.isAdmin()) {
+                <button 
+                  (click)="deleteCurrentLightboxPhoto($event)"
+                  class="touch-target-48 min-w-[48px] min-h-[48px] text-white/80 hover:text-rose-400 p-3 rounded-full hover:bg-white/10 transition flex items-center gap-1.5 text-xs font-semibold"
+                  aria-label="Eliminar fotografía"
+                  title="Eliminar fotografía del álbum"
+                >
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span class="hidden sm:inline">Eliminar</span>
+                </button>
+              }
+
+              <!-- Close Button (Min 48px) -->
+              <button 
+                (click)="closeLightbox(); $event.stopPropagation()"
+                class="touch-target-48 min-w-[48px] min-h-[48px] text-white/80 hover:text-white p-3 rounded-full hover:bg-white/10 transition"
+                aria-label="Cerrar visor"
+              >
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Prev Button (Min 48px) -->
           <button 
             (click)="prevLightbox(); $event.stopPropagation()"
-            class="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white p-3 rounded-full hover:bg-white/10 transition z-40"
+            class="touch-target-48 min-w-[48px] min-h-[48px] absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 text-white/80 hover:text-white p-3 rounded-full hover:bg-white/10 transition z-40"
             aria-label="Foto anterior"
           >
-            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
 
-          <!-- Main Image View -->
+          <!-- Main Image View Container with Swipe gestures and Touch Zoom -->
           <div 
-            class="flex-1 h-full flex flex-col items-center justify-center p-2 sm:p-6 overflow-hidden max-h-[85vh] w-full"
+            class="flex-1 h-full flex flex-col items-center justify-center p-1 sm:p-6 overflow-hidden max-h-[82vh] w-full relative touch-none select-none"
             (click)="$event.stopPropagation()"
+            (touchstart)="onTouchStart($event)"
+            (touchmove)="onTouchMove($event)"
+            (touchend)="onTouchEnd($event)"
           >
+            <!-- Loading spinner while full photo loads -->
+            @if (!loadedLightboxImage()) {
+              <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div class="w-10 h-10 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+              </div>
+            }
+
             <img 
               [src]="albumService.getImageUrl(currentLightboxPhoto()!.imageUrl)" 
               [alt]="currentLightboxPhoto()!.caption || 'Fotografía'"
-              class="max-h-[80vh] md:max-h-[86vh] max-w-full object-contain shadow-2xl rounded-sm"
+              (click)="handleImageTap()"
+              (load)="loadedLightboxImage.set(true)"
+              class="max-h-[76vh] md:max-h-[84vh] max-w-full object-contain shadow-2xl rounded-sm transition-transform duration-100 will-change-transform"
+              [style.transform]="'translate3d(' + touchDeltaX() + 'px, ' + (touchDeltaY() > 0 ? touchDeltaY() : 0) + 'px, 0) scale(' + zoomLevel() + ')'"
+              [style.cursor]="zoomLevel() > 1 ? 'zoom-out' : 'zoom-in'"
             />
+
             @if (currentLightboxPhoto()!.caption) {
-              <div class="mt-3 text-xs sm:text-sm text-neutral-300 text-center tracking-wide">
+              <div class="mt-3 text-xs sm:text-sm text-neutral-300 text-center tracking-wide px-4">
                 {{ currentLightboxPhoto()!.caption }}
               </div>
             }
           </div>
 
-          <!-- Next Button -->
+          <!-- Next Button (Min 48px) -->
           <button 
             (click)="nextLightbox(); $event.stopPropagation()"
-            class="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white p-3 rounded-full hover:bg-white/10 transition z-40"
+            class="touch-target-48 min-w-[48px] min-h-[48px] absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 text-white/80 hover:text-white p-3 rounded-full hover:bg-white/10 transition z-40"
             aria-label="Foto siguiente"
           >
-            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-7 h-7 sm:w-8 sm:h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
           </button>
 
           <!-- Counter Bottom -->
-          <div class="text-xs text-neutral-400">
+          <div class="text-xs text-neutral-400 py-1 font-mono">
             {{ activeLightboxIndex()! + 1 }} / {{ album()!.photos!.length }}
           </div>
         </div>
@@ -260,9 +306,9 @@ import { CanvasPhoto, PhotoLayoutPayload } from '../../models/canvas-photo.model
 
       <!-- MODAL: ADD PHOTOS TO ALBUM -->
       @if (showAddPhotoModal()) {
-        <div class="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+        <div class="fixed inset-0 z-[9990] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
           <div 
-            class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 md:p-8 border border-neutral-200 relative overflow-hidden"
+            class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-5 sm:p-7 md:p-8 border border-neutral-200 relative overflow-hidden"
             (click)="$event.stopPropagation()"
           >
             <div class="flex items-center justify-between pb-4 border-b border-neutral-100">
@@ -272,7 +318,8 @@ import { CanvasPhoto, PhotoLayoutPayload } from '../../models/canvas-photo.model
               <button 
                 type="button" 
                 (click)="showAddPhotoModal.set(false)"
-                class="text-neutral-400 hover:text-black p-1"
+                class="touch-target-48 text-neutral-400 hover:text-black p-2 rounded-full hover:bg-neutral-100 transition"
+                aria-label="Cerrar modal"
               >
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -284,16 +331,34 @@ import { CanvasPhoto, PhotoLayoutPayload } from '../../models/canvas-photo.model
               <!-- Upload multiple files -->
               <div>
                 <label class="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">
-                  Subir Archivo(s) de Foto
+                  Subir Archivo(s) de Foto (Compresión automática activa)
                 </label>
                 <input 
                   type="file" 
                   (change)="onFilesSelected($event)" 
                   multiple 
                   accept="image/*"
-                  class="block w-full text-xs text-neutral-500 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-neutral-100 file:text-neutral-800 hover:file:bg-neutral-200 cursor-pointer"
+                  class="block w-full text-xs text-neutral-500 file:mr-3 file:py-2.5 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-neutral-100 file:text-neutral-800 hover:file:bg-neutral-200 cursor-pointer"
                 />
               </div>
+
+              <!-- Compression feedback -->
+              @if (compressingFiles()) {
+                <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2.5">
+                  <svg class="animate-spin h-4 w-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span class="font-medium">{{ compressionProgress() || 'Comprimiendo y convirtiendo a WebP...' }}</span>
+                </div>
+              } @else if (selectedFiles.length > 0) {
+                <div class="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2 font-medium">
+                  <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>{{ selectedFiles.length }} archivo(s) optimizado(s) y listos para subir</span>
+                </div>
+              }
 
               <!-- Or External URL -->
               <div>
@@ -305,7 +370,7 @@ import { CanvasPhoto, PhotoLayoutPayload } from '../../models/canvas-photo.model
                   [(ngModel)]="newPhotoUrl" 
                   name="newPhotoUrl" 
                   placeholder="https://images.unsplash.com/..."
-                  class="w-full px-3 py-2 rounded-lg border border-neutral-300 text-xs focus:outline-none focus:ring-2 focus:ring-black"
+                  class="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-xs focus:outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
 
@@ -317,7 +382,7 @@ import { CanvasPhoto, PhotoLayoutPayload } from '../../models/canvas-photo.model
                 <select 
                   [(ngModel)]="newPhotoOrientation" 
                   name="newPhotoOrientation"
-                  class="w-full px-3 py-2 rounded-lg border border-neutral-300 text-xs focus:outline-none focus:ring-2 focus:ring-black bg-white"
+                  class="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-xs focus:outline-none focus:ring-2 focus:ring-black bg-white"
                 >
                   <option value="portrait">Vertical (Portrait 4:5)</option>
                   <option value="landscape">Horizontal (Landscape 16:10)</option>
@@ -335,7 +400,7 @@ import { CanvasPhoto, PhotoLayoutPayload } from '../../models/canvas-photo.model
                   [(ngModel)]="newPhotoCaption" 
                   name="newPhotoCaption" 
                   placeholder="Ej. Nocturnal Rain Reflection, Tokyo..."
-                  class="w-full px-3 py-2 rounded-lg border border-neutral-300 text-xs focus:outline-none focus:ring-2 focus:ring-black"
+                  class="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-xs focus:outline-none focus:ring-2 focus:ring-black"
                 />
               </div>
 
@@ -344,17 +409,17 @@ import { CanvasPhoto, PhotoLayoutPayload } from '../../models/canvas-photo.model
                 <button 
                   type="button" 
                   (click)="showAddPhotoModal.set(false)"
-                  class="px-4 py-2 text-xs font-semibold text-neutral-600 hover:text-black"
+                  class="touch-target-48 min-h-[48px] px-4 py-2 text-xs font-semibold text-neutral-600 hover:text-black transition"
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit" 
-                  [disabled]="submittingPhotos() || (!selectedFiles.length && !newPhotoUrl.trim())"
-                  class="px-5 py-2 bg-black text-white text-xs font-bold rounded-lg hover:bg-neutral-800 transition disabled:opacity-50 flex items-center gap-1.5"
+                  [disabled]="submittingPhotos() || compressingFiles() || (!selectedFiles.length && !newPhotoUrl.trim())"
+                  class="touch-target-48 min-h-[48px] px-6 py-2.5 bg-black text-white text-xs font-bold rounded-lg hover:bg-neutral-800 transition disabled:opacity-50 flex items-center gap-2"
                 >
                   @if (submittingPhotos()) {
-                    <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                    <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -381,7 +446,7 @@ import { CanvasPhoto, PhotoLayoutPayload } from '../../models/canvas-photo.model
     </div>
   `
 })
-export class AlbumDetailComponent implements OnInit {
+export class AlbumDetailComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   readonly albumService = inject(AlbumService);
@@ -392,13 +457,23 @@ export class AlbumDetailComponent implements OnInit {
   readonly album = signal<Album | null>(null);
   readonly loading = signal(true);
 
-  // Lightbox
+  // Lightbox & Gestos Táctiles
   readonly activeLightboxIndex = signal<number | null>(null);
+  readonly touchDeltaX = signal<number>(0);
+  readonly touchDeltaY = signal<number>(0);
+  readonly isSwiping = signal<boolean>(false);
+  readonly zoomLevel = signal<number>(1);
+  readonly loadedLightboxImage = signal<boolean>(false);
+  private touchStartX = 0;
+  private touchStartY = 0;
+  private lastTapTime = 0;
 
-  // Admin Modals
+  // Admin Modals & Compresión
   readonly showEditAlbumModal = signal(false);
   readonly showAddPhotoModal = signal(false);
   readonly submittingPhotos = signal(false);
+  readonly compressingFiles = signal(false);
+  readonly compressionProgress = signal('');
 
   // Photo Upload State
   selectedFiles: File[] = [];
@@ -414,6 +489,12 @@ export class AlbumDetailComponent implements OnInit {
         this.fetchAlbum(albumId);
       }
     });
+  }
+
+  ngOnDestroy() {
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = '';
+    }
   }
 
   fetchAlbum(id: string) {
@@ -457,7 +538,15 @@ export class AlbumDetailComponent implements OnInit {
     const photos = this.album()?.photos || [];
     const index = photos.findIndex(p => p.id === canvasPhoto.id);
     if (index !== -1) {
-      this.activeLightboxIndex.set(index);
+      this.openLightboxIndex(index);
+    }
+  }
+
+  openLightboxForPhoto(photo: AlbumPhoto) {
+    const photos = this.album()?.photos || [];
+    const index = photos.findIndex(p => p.id === photo.id);
+    if (index !== -1) {
+      this.openLightboxIndex(index);
     }
   }
 
@@ -495,16 +584,25 @@ export class AlbumDetailComponent implements OnInit {
     });
   }
 
-  openLightboxForPhoto(photo: AlbumPhoto) {
-    const photos = this.album()?.photos || [];
-    const index = photos.findIndex(p => p.id === photo.id);
-    if (index !== -1) {
-      this.activeLightboxIndex.set(index);
+  openLightboxIndex(index: number) {
+    this.zoomLevel.set(1);
+    this.loadedLightboxImage.set(false);
+    this.touchDeltaX.set(0);
+    this.touchDeltaY.set(0);
+    this.activeLightboxIndex.set(index);
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = 'hidden';
     }
   }
 
   closeLightbox() {
     this.activeLightboxIndex.set(null);
+    this.zoomLevel.set(1);
+    this.touchDeltaX.set(0);
+    this.touchDeltaY.set(0);
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = '';
+    }
   }
 
   currentLightboxPhoto(): AlbumPhoto | null {
@@ -517,6 +615,8 @@ export class AlbumDetailComponent implements OnInit {
   prevLightbox() {
     const idx = this.activeLightboxIndex();
     if (idx === null) return;
+    this.loadedLightboxImage.set(false);
+    this.zoomLevel.set(1);
     const total = (this.album()?.photos || []).length;
     this.activeLightboxIndex.set((idx - 1 + total) % total);
   }
@@ -524,8 +624,72 @@ export class AlbumDetailComponent implements OnInit {
   nextLightbox() {
     const idx = this.activeLightboxIndex();
     if (idx === null) return;
+    this.loadedLightboxImage.set(false);
+    this.zoomLevel.set(1);
     const total = (this.album()?.photos || []).length;
     this.activeLightboxIndex.set((idx + 1) % total);
+  }
+
+  // ==========================================
+  // Gestos táctiles de Lightbox (Swipe & Zoom)
+  // ==========================================
+  onTouchStart(event: TouchEvent) {
+    if (event.touches.length === 1) {
+      this.touchStartX = event.touches[0].clientX;
+      this.touchStartY = event.touches[0].clientY;
+      this.isSwiping.set(true);
+    }
+  }
+
+  onTouchMove(event: TouchEvent) {
+    if (!this.isSwiping() || event.touches.length !== 1) return;
+    if (this.zoomLevel() > 1) return; // Permitir panning si hay zoom
+
+    const currentX = event.touches[0].clientX;
+    const currentY = event.touches[0].clientY;
+    const deltaX = currentX - this.touchStartX;
+    const deltaY = currentY - this.touchStartY;
+
+    this.touchDeltaX.set(deltaX);
+    this.touchDeltaY.set(deltaY);
+  }
+
+  onTouchEnd(event: TouchEvent) {
+    if (!this.isSwiping()) return;
+    this.isSwiping.set(false);
+
+    const dx = this.touchDeltaX();
+    const dy = this.touchDeltaY();
+    this.touchDeltaX.set(0);
+    this.touchDeltaY.set(0);
+
+    if (this.zoomLevel() > 1) return;
+
+    // Swipe vertical hacia abajo para descartar / cerrar
+    if (dy > 90 && Math.abs(dx) < 70) {
+      this.closeLightbox();
+      return;
+    }
+
+    // Swipe horizontal para cambiar de fotografía
+    if (dx > 50) {
+      this.prevLightbox();
+    } else if (dx < -50) {
+      this.nextLightbox();
+    }
+  }
+
+  handleImageTap() {
+    const now = Date.now();
+    if (now - this.lastTapTime < 300) {
+      this.zoomLevel.update(z => (z > 1 ? 1 : 2));
+    }
+    this.lastTapTime = now;
+  }
+
+  toggleZoom(event: Event) {
+    event.stopPropagation();
+    this.zoomLevel.update(z => (z > 1 ? 1 : 2));
   }
 
   @HostListener('window:keydown', ['$event'])
@@ -541,10 +705,36 @@ export class AlbumDetailComponent implements OnInit {
     }
   }
 
-  onFilesSelected(event: Event) {
+  // ==========================================
+  // Pipeline de Selección y Compresión Client-Side
+  // ==========================================
+  async onFilesSelected(event: Event) {
     const input = event.target as HTMLInputElement;
-    if (input.files) {
-      this.selectedFiles = Array.from(input.files);
+    if (!input.files || input.files.length === 0) return;
+
+    const rawFiles = Array.from(input.files);
+    this.compressingFiles.set(true);
+    this.compressionProgress.set(`Optimizando 0 de ${rawFiles.length}...`);
+
+    try {
+      const results = await compressImages(rawFiles, { maxDimension: 2048, quality: 0.82 }, (done, total) => {
+        this.compressionProgress.set(`Optimizando imagen ${done} de ${total}...`);
+      });
+
+      this.selectedFiles = results.map(r => r.file);
+      const totalOrig = results.reduce((acc, r) => acc + r.originalSize, 0);
+      const totalComp = results.reduce((acc, r) => acc + r.compressedSize, 0);
+      const savings = totalOrig > 0 ? Math.round(((totalOrig - totalComp) / totalOrig) * 100) : 0;
+
+      this.toastService.success(
+        `Fotos optimizadas: ${formatBytes(totalOrig)} → ${formatBytes(totalComp)} (${savings}% de ahorro)`
+      );
+    } catch (err) {
+      console.error('Error al optimizar fotos:', err);
+      this.selectedFiles = rawFiles;
+    } finally {
+      this.compressingFiles.set(false);
+      this.compressionProgress.set('');
     }
   }
 

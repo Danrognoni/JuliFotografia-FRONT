@@ -124,7 +124,7 @@ import { AuthService } from '../../services/auth.service';
           <button 
             type="button"
             (click)="toggleLogin.emit()"
-            class="min-w-[44px] min-h-[44px] flex items-center justify-center backdrop-blur-md bg-black/35 rounded-xl border border-white/20 text-white/90 shadow-md active:scale-95 transition"
+            class="min-w-[48px] min-h-[48px] flex items-center justify-center backdrop-blur-md bg-black/35 rounded-xl border border-white/20 text-white/90 shadow-md active:scale-95 transition touch-target-48"
             [title]="authService.isAdmin() ? 'Panel Admin Activo' : 'Acceso Administrador'"
             aria-label="Acceso Administrador"
           >
@@ -141,7 +141,7 @@ import { AuthService } from '../../services/auth.service';
           <button 
             type="button"
             (click)="mobileMenuOpen = !mobileMenuOpen"
-            class="min-w-[44px] min-h-[44px] flex items-center justify-center backdrop-blur-md bg-black/35 rounded-xl border border-white/20 text-white shadow-md active:scale-95 transition"
+            class="min-w-[48px] min-h-[48px] flex items-center justify-center backdrop-blur-md bg-black/35 rounded-xl border border-white/20 text-white shadow-md active:scale-95 transition touch-target-48"
             [attr.aria-expanded]="mobileMenuOpen"
             aria-label="Abrir menú de navegación"
           >
@@ -165,7 +165,7 @@ import { AuthService } from '../../services/auth.service';
             <a 
               (click)="mobileMenuOpen = false" 
               href="#home" 
-              class="text-xs font-semibold tracking-widest uppercase text-neutral-200 hover:text-white px-3 py-3 min-h-[44px] flex items-center justify-between border-b border-white/10 active:bg-white/10 rounded-lg transition"
+              class="text-xs font-semibold tracking-widest uppercase text-neutral-200 hover:text-white px-3 py-3 min-h-[48px] flex items-center justify-between border-b border-white/10 active:bg-white/10 rounded-lg transition touch-target-48"
             >
               <span>{{ siteContentService.content().menuHome || 'Home' }}</span>
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400/80"></span>
@@ -173,7 +173,7 @@ import { AuthService } from '../../services/auth.service';
             <a 
               (click)="mobileMenuOpen = false" 
               href="#portfolio" 
-              class="text-xs font-semibold tracking-widest uppercase text-neutral-200 hover:text-white px-3 py-3 min-h-[44px] flex items-center justify-between border-b border-white/10 active:bg-white/10 rounded-lg transition"
+              class="text-xs font-semibold tracking-widest uppercase text-neutral-200 hover:text-white px-3 py-3 min-h-[48px] flex items-center justify-between border-b border-white/10 active:bg-white/10 rounded-lg transition touch-target-48"
             >
               <span>{{ siteContentService.content().menuPortfolio || 'Portfolio' }}</span>
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400/80"></span>
@@ -181,7 +181,7 @@ import { AuthService } from '../../services/auth.service';
             <a 
               (click)="mobileMenuOpen = false" 
               href="#about" 
-              class="text-xs font-semibold tracking-widest uppercase text-neutral-200 hover:text-white px-3 py-3 min-h-[44px] flex items-center justify-between border-b border-white/10 active:bg-white/10 rounded-lg transition"
+              class="text-xs font-semibold tracking-widest uppercase text-neutral-200 hover:text-white px-3 py-3 min-h-[48px] flex items-center justify-between border-b border-white/10 active:bg-white/10 rounded-lg transition touch-target-48"
             >
               <span>{{ siteContentService.content().menuAbout || 'About' }}</span>
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400/80"></span>
@@ -189,7 +189,7 @@ import { AuthService } from '../../services/auth.service';
             <a 
               (click)="mobileMenuOpen = false" 
               href="#faq" 
-              class="text-xs font-semibold tracking-widest uppercase text-neutral-200 hover:text-white px-3 py-3 min-h-[44px] flex items-center justify-between border-b border-white/10 active:bg-white/10 rounded-lg transition"
+              class="text-xs font-semibold tracking-widest uppercase text-neutral-200 hover:text-white px-3 py-3 min-h-[48px] flex items-center justify-between border-b border-white/10 active:bg-white/10 rounded-lg transition touch-target-48"
             >
               <span>FAQ</span>
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400/80"></span>
@@ -197,7 +197,7 @@ import { AuthService } from '../../services/auth.service';
             <a 
               (click)="mobileMenuOpen = false" 
               href="#contact" 
-              class="text-xs font-semibold tracking-widest uppercase text-neutral-200 hover:text-white px-3 py-3 min-h-[44px] flex items-center justify-between active:bg-white/10 rounded-lg transition"
+              class="text-xs font-semibold tracking-widest uppercase text-neutral-200 hover:text-white px-3 py-3 min-h-[48px] flex items-center justify-between active:bg-white/10 rounded-lg transition touch-target-48"
             >
               <span>{{ siteContentService.content().menuContact || 'Contact' }}</span>
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400/80"></span>

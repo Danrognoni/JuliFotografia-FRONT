@@ -5,15 +5,16 @@ import { PhotoService } from '../../services/photo.service';
 import { AlbumService } from '../../services/album.service';
 import { ToastService } from '../../services/toast.service';
 import { Photo } from '../../models/photo.model';
+import { compressImage, formatBytes } from '../../utils/image-compression.util';
 
 @Component({
   selector: 'app-photo-modal',
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+    <div class="fixed inset-0 z-[9990] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
       <div 
-        class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-5 sm:p-7 md:p-8 border border-neutral-200 relative overflow-hidden max-h-[90vh] flex flex-col"
+        class="bg-white rounded-2xl shadow-2xl max-w-2xl w-[95vw] sm:w-full p-5 sm:p-7 md:p-8 border border-neutral-200 relative overflow-hidden max-h-[90vh] flex flex-col"
         (click)="$event.stopPropagation()"
       >
         <!-- Header -->
@@ -28,8 +29,8 @@ import { Photo } from '../../models/photo.model';
           </div>
           <button 
             (click)="close.emit()"
-            class="text-neutral-400 hover:text-black transition p-1 rounded-full hover:bg-neutral-100"
-            aria-label="Cerrar"
+            class="touch-target-48 min-w-[48px] min-h-[48px] text-neutral-400 hover:text-black transition p-2 rounded-full hover:bg-neutral-100"
+            aria-label="Cerrar modal"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -59,6 +60,11 @@ import { Photo } from '../../models/photo.model';
                 <div class="flex flex-col items-center">
                   <img [src]="previewUrl()" class="h-32 object-contain rounded-lg shadow-sm mb-2" alt="Preview" />
                   <span class="text-xs text-neutral-600 font-medium">Click para cambiar imagen seleccionada</span>
+                  @if (compressionStats()) {
+                    <span class="mt-1 text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full font-medium border border-emerald-200">
+                      {{ compressionStats() }}
+                    </span>
+                  }
                 </div>
               } @else if (formData.imageUrl) {
                 <div class="flex flex-col items-center">
@@ -71,7 +77,17 @@ import { Photo } from '../../models/photo.model';
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   <p class="text-sm font-medium text-neutral-700">Arrastra o haz click para seleccionar tu foto</p>
-                  <p class="text-[11px] text-neutral-400">JPG, PNG o WEBP en alta resolución</p>
+                  <p class="text-[11px] text-neutral-400">JPG, PNG o WEBP (Compresión automática a WebP activa)</p>
+                </div>
+              }
+
+              @if (compressing()) {
+                <div class="mt-3 p-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-center gap-2">
+                  <svg class="animate-spin h-3.5 w-3.5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Optimizando resolución y peso en el navegador...</span>
                 </div>
               }
             </div>
@@ -229,15 +245,15 @@ import { Photo } from '../../models/photo.model';
           <button 
             type="button" 
             (click)="close.emit()"
-            class="w-full sm:w-auto min-h-[44px] px-4 py-2 text-sm text-neutral-600 hover:text-black font-medium transition flex items-center justify-center"
+            class="touch-target-48 min-h-[48px] px-4 py-2 text-sm text-neutral-600 hover:text-black font-medium transition flex items-center justify-center"
           >
             Cancelar
           </button>
           <button 
             type="button" 
             (click)="onSubmit()"
-            [disabled]="loading()"
-            class="w-full sm:w-auto min-h-[44px] px-6 py-2.5 bg-black text-white text-sm font-semibold rounded-lg hover:bg-neutral-800 transition disabled:opacity-50 flex items-center justify-center gap-2"
+            [disabled]="loading() || compressing()"
+            class="touch-target-48 min-h-[48px] px-6 py-2.5 bg-black text-white text-sm font-semibold rounded-lg hover:bg-neutral-800 transition disabled:opacity-50 flex items-center justify-center gap-2"
           >
             @if (loading()) {
               <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
@@ -266,6 +282,8 @@ export class PhotoModalComponent implements OnInit {
   selectedFile: File | null = null;
   readonly previewUrl = signal<string | null>(null);
   readonly loading = signal(false);
+  readonly compressing = signal(false);
+  readonly compressionStats = signal<string>('');
 
   formData: Partial<Photo> = {
     title: '',
@@ -300,13 +318,33 @@ export class PhotoModalComponent implements OnInit {
     return this.albumService.albums().some(a => a.name.trim().toLowerCase() === cat.trim().toLowerCase());
   }
 
-  onFileSelected(event: Event) {
+  async onFileSelected(event: Event) {
     const target = event.target as HTMLInputElement;
     if (target.files && target.files[0]) {
-      this.selectedFile = target.files[0];
-      const reader = new FileReader();
-      reader.onload = e => this.previewUrl.set(e.target?.result as string);
-      reader.readAsDataURL(this.selectedFile);
+      const file = target.files[0];
+      this.compressing.set(true);
+      this.compressionStats.set('');
+
+      try {
+        const res = await compressImage(file, { maxDimension: 2048, quality: 0.82 });
+        this.selectedFile = res.file;
+        if (res.isCompressed) {
+          const stats = `Optimizada: ${formatBytes(res.originalSize)} → ${formatBytes(res.compressedSize)} (${res.reductionPercentage}% reducción)`;
+          this.compressionStats.set(stats);
+          this.toastService.info(stats);
+        }
+        const reader = new FileReader();
+        reader.onload = e => this.previewUrl.set(e.target?.result as string);
+        reader.readAsDataURL(this.selectedFile);
+      } catch (err: any) {
+        console.warn('Compresión omitida o error:', err);
+        this.selectedFile = file;
+        const reader = new FileReader();
+        reader.onload = e => this.previewUrl.set(e.target?.result as string);
+        reader.readAsDataURL(file);
+      } finally {
+        this.compressing.set(false);
+      }
     }
   }
 

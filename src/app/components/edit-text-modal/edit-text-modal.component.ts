@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { SiteContentService } from '../../services/site-content.service';
 import { ToastService } from '../../services/toast.service';
 import { SiteContent } from '../../models/site-content.model';
+import { compressImage, formatBytes } from '../../utils/image-compression.util';
 
 export interface EditFieldConfig {
   key: keyof SiteContent;
@@ -17,9 +18,9 @@ export interface EditFieldConfig {
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="fixed inset-0 z-[9990] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+    <div class="fixed inset-0 z-[9990] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
       <div 
-        class="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-5 sm:p-7 md:p-8 border border-neutral-200 relative overflow-hidden max-h-[90vh] flex flex-col"
+        class="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-4 sm:p-6 md:p-8 border border-neutral-200 relative overflow-hidden max-h-[92vh] flex flex-col"
         (click)="$event.stopPropagation()"
       >
         <!-- Header -->
@@ -32,7 +33,7 @@ export interface EditFieldConfig {
           </div>
           <button 
             (click)="close.emit()"
-            class="text-neutral-400 hover:text-black transition p-1 rounded-full hover:bg-neutral-100"
+            class="text-neutral-400 hover:text-black transition w-12 h-12 -mr-2 rounded-full hover:bg-neutral-100 flex items-center justify-center touch-target-48"
             aria-label="Cerrar"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -42,7 +43,7 @@ export interface EditFieldConfig {
         </div>
 
         <!-- Form Body -->
-        <div class="overflow-y-auto py-4 space-y-4 flex-1 pr-1">
+        <div class="overflow-y-auto py-4 space-y-5 flex-1 pr-1">
           @for (field of fields; track field.key) {
             <div>
               <label class="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1">
@@ -65,11 +66,11 @@ export interface EditFieldConfig {
                       type="text" 
                       [(ngModel)]="formData[field.key]" 
                       placeholder="https://... o sube un archivo"
-                      class="w-full px-3.5 py-2 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
+                      class="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
                     />
                   </div>
-                  <div class="flex items-center gap-3">
-                    <label class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-xs font-medium rounded-md transition">
+                  <div class="flex flex-wrap items-center gap-3">
+                    <label class="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-semibold rounded-lg transition min-h-[48px] touch-target-48">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
@@ -78,10 +79,13 @@ export interface EditFieldConfig {
                         type="file" 
                         accept="image/*" 
                         class="hidden" 
+                        [disabled]="uploading()"
                         (change)="onFileUpload($event, field.key)"
                       />
                     </label>
-                    @if (formData[field.key]) {
+                    @if (uploading()) {
+                      <span class="text-xs text-amber-600 font-medium animate-pulse">Optimizando y subiendo...</span>
+                    } @else if (formData[field.key]) {
                       <span class="text-xs text-neutral-400 truncate max-w-xs">Vista previa disponible</span>
                     }
                   </div>
@@ -102,15 +106,15 @@ export interface EditFieldConfig {
           <button 
             type="button" 
             (click)="close.emit()"
-            class="w-full sm:w-auto min-h-[44px] px-4 py-2 text-sm text-neutral-600 hover:text-black font-medium transition flex items-center justify-center"
+            class="w-full sm:w-auto min-h-[48px] px-5 py-2.5 text-sm text-neutral-600 hover:text-black font-medium transition flex items-center justify-center touch-target-48 rounded-lg hover:bg-neutral-50"
           >
             Cancelar
           </button>
           <button 
             type="button" 
             (click)="saveChanges()"
-            [disabled]="saving()"
-            class="w-full sm:w-auto min-h-[44px] px-6 py-2.5 bg-black text-white text-sm font-semibold rounded-lg hover:bg-neutral-800 transition disabled:opacity-50 flex items-center justify-center gap-2"
+            [disabled]="saving() || uploading()"
+            class="w-full sm:w-auto min-h-[48px] px-6 py-2.5 bg-black text-white text-sm font-semibold rounded-lg hover:bg-neutral-800 transition disabled:opacity-50 flex items-center justify-center gap-2 touch-target-48"
           >
             @if (saving()) {
               <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
@@ -137,6 +141,7 @@ export class EditTextModalComponent {
 
   formData: Record<string, any> = {};
   readonly saving = signal(false);
+  readonly uploading = signal(false);
 
   ngOnInit() {
     const current = this.siteContentService.content();
@@ -145,20 +150,43 @@ export class EditTextModalComponent {
     });
   }
 
-  onFileUpload(event: Event, key: string) {
+  async onFileUpload(event: Event, key: string) {
     const target = event.target as HTMLInputElement;
     if (target.files && target.files[0]) {
-      const file = target.files[0];
-      this.toastService.info('Subiendo imagen...');
-      this.siteContentService.uploadImage(file, key).subscribe({
-        next: (res) => {
-          this.formData[key] = res.url;
-          this.toastService.success('Imagen subida con éxito');
-        },
-        error: () => {
-          this.toastService.error('Error al subir la imagen');
+      const originalFile = target.files[0];
+      this.uploading.set(true);
+      this.toastService.info('Optimizando imagen...');
+
+      try {
+        const result = await compressImage(originalFile, {
+          maxDimension: 2048,
+          quality: 0.82
+        });
+
+        if (result.isCompressed && result.savedBytes > 0) {
+          const origStr = formatBytes(result.originalSize);
+          const compStr = formatBytes(result.compressedSize);
+          this.toastService.info(`Comprimida: ${origStr} ➔ ${compStr}. Subiendo...`);
+        } else {
+          this.toastService.info('Subiendo imagen...');
         }
-      });
+
+        this.siteContentService.uploadImage(result.file, key).subscribe({
+          next: (res) => {
+            this.uploading.set(false);
+            this.formData[key] = res.url;
+            this.toastService.success('Imagen subida con éxito');
+            target.value = '';
+          },
+          error: () => {
+            this.uploading.set(false);
+            this.toastService.error('Error al subir la imagen');
+          }
+        });
+      } catch (err) {
+        this.uploading.set(false);
+        this.toastService.error('Error al procesar la imagen');
+      }
     }
   }
 

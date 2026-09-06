@@ -52,7 +52,7 @@ import {
 
           <!-- Admin Quick Action Toolbar -->
           @if (authService.isAdmin()) {
-            <div class="flex items-center flex-wrap gap-2 w-full sm:w-auto">
+            <div class="flex items-center flex-wrap gap-2.5 w-full sm:w-auto">
               
               <!-- Botón Guardar Layout (Activo si hay cambios pendientes en modo edición) -->
               @if (isEditLayoutMode()) {
@@ -60,11 +60,11 @@ import {
                   type="button"
                   (click)="saveLayout()"
                   [disabled]="!pendingChanges() || savingLayout()"
-                  class="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 min-h-[42px] bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-300 text-white text-xs font-bold rounded-xl shadow-sm transition disabled:cursor-not-allowed"
+                  class="touch-target-48 inline-flex items-center justify-center gap-2 px-4 py-3 min-h-[48px] bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-300 text-white text-xs font-bold rounded-xl shadow-sm transition disabled:cursor-not-allowed"
                   title="Guardar diseño del lienzo"
                 >
                   @if (savingLayout()) {
-                    <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                    <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -84,10 +84,10 @@ import {
                 <button 
                   type="button"
                   (click)="autoArrangeCollage()"
-                  class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[42px] bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-semibold rounded-xl border border-neutral-300 shadow-sm transition"
+                  class="touch-target-48 inline-flex items-center justify-center gap-1.5 px-4 py-3 min-h-[48px] bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-semibold rounded-xl border border-neutral-300 shadow-sm transition"
                   title="Distribuir automáticamente en collage asimétrico"
                 >
-                  <svg class="w-3.5 h-3.5 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg class="w-4 h-4 text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                   </svg>
                   <span class="inline">Auto Collage</span>
@@ -98,7 +98,7 @@ import {
               <button 
                 type="button"
                 (click)="toggleEditLayoutMode()"
-                class="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 min-h-[42px] text-xs font-bold rounded-xl border transition shadow-sm"
+                class="touch-target-48 inline-flex items-center justify-center gap-2 px-4 py-3 min-h-[48px] text-xs font-bold rounded-xl border transition shadow-sm"
                 [ngClass]="isEditLayoutMode() 
                   ? 'bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100' 
                   : 'bg-white hover:bg-neutral-50 text-neutral-800 border-neutral-300'"
@@ -121,7 +121,7 @@ import {
                 <button 
                   type="button"
                   (click)="openCreateAlbumModal()"
-                  class="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 min-h-[42px] bg-white hover:bg-neutral-50 text-neutral-900 text-xs font-bold rounded-xl border border-neutral-300 shadow-sm transition hover:shadow"
+                  class="touch-target-48 inline-flex items-center justify-center gap-2 px-4 py-3 min-h-[48px] bg-white hover:bg-neutral-50 text-neutral-900 text-xs font-bold rounded-xl border border-neutral-300 shadow-sm transition hover:shadow"
                 >
                   <svg class="w-4 h-4 text-neutral-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -134,14 +134,126 @@ import {
           }
         </div>
 
-        <!-- FREE-FORM CANVAS (LIENZO DE DISEÑO LIBRE) -->
+        <!-- ====================================================================
+             VISTA RESPONSIVE MOBILE-FIRST (PANTALLAS < 768px: 360px - 430px)
+             Cuadrícula dinámica CSS Grid con aspect-ratio consistente y skeletons
+             ==================================================================== -->
+        @if (!isEditLayoutMode()) {
+          <div class="md:hidden w-full max-w-full">
+            @if (albumService.albums().length === 0) {
+              <div class="py-20 text-center text-neutral-400">
+                <svg class="w-12 h-12 mx-auto mb-3 text-neutral-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p class="text-sm font-medium">No hay álbumes para mostrar.</p>
+              </div>
+            } @else {
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full pb-14">
+                @for (album of albumService.albums(); track album.id; let i = $index) {
+                  <article 
+                    (click)="onAlbumClick(album, $event)"
+                    class="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-black/5 cursor-pointer active:scale-[0.99] flex flex-col"
+                  >
+                    <!-- Portada con relación de aspecto 4:3 estricta y skeleton shimmer (CLS = 0) -->
+                    <div class="relative w-full aspect-[4/3] bg-neutral-100 overflow-hidden">
+                      <div 
+                        class="absolute inset-0 skeleton-shimmer pointer-events-none transition-opacity duration-300"
+                        [class.opacity-0]="loadedImages()[album.id]"
+                      ></div>
+                      <img 
+                        [src]="albumService.getImageUrl(album.coverImageUrl || album.coverImage)" 
+                        [alt]="album.title || album.name"
+                        (load)="onImageLoaded(album.id)"
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                        [class.opacity-0]="!loadedImages()[album.id]"
+                        [class.opacity-100]="loadedImages()[album.id]"
+                        loading="lazy"
+                        decoding="async"
+                      />
+
+                      <!-- Etiqueta amarilla Dennis Wanderlight -->
+                      <div class="absolute bottom-3 left-3 z-10">
+                        <span class="inline-block bg-[#feea68] px-3 py-1 text-[11px] sm:text-xs font-bold text-neutral-900 shadow-sm rounded-sm">
+                          {{ album.title || album.name }}
+                        </span>
+                      </div>
+
+                      <!-- Contador de fotos -->
+                      @if (album.photos?.length || album.count) {
+                        <div class="absolute top-3 right-3 z-10">
+                          <span class="inline-flex items-center gap-1 bg-black/65 backdrop-blur-md px-2.5 py-1 text-[10px] font-semibold text-white rounded-full">
+                            <svg class="w-3 h-3 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span>{{ album.photos?.length || album.count }} fotos</span>
+                          </span>
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Footer del Card con touch targets ergonómicos de 48px -->
+                    <div class="p-4 flex items-center justify-between gap-2">
+                      <div class="min-w-0 flex-1">
+                        @if (album.subtitle) {
+                          <p class="text-[10px] font-semibold uppercase tracking-wider text-neutral-400 truncate mb-0.5">
+                            {{ album.subtitle }}
+                          </p>
+                        }
+                        <h3 class="text-sm font-bold text-neutral-900 truncate">
+                          {{ album.title || album.name }}
+                        </h3>
+                      </div>
+                      
+                      <!-- Acciones de administración en móvil -->
+                      @if (authService.isAdmin()) {
+                        <div class="flex items-center gap-1 shrink-0" (click)="$event.stopPropagation()">
+                          <button 
+                            type="button"
+                            (click)="openEditAlbumModal(album, $event)"
+                            class="touch-target-48 text-neutral-600 hover:text-black p-2.5 rounded-full hover:bg-neutral-100 transition"
+                            title="Editar álbum"
+                            aria-label="Editar álbum"
+                          >
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </button>
+                          <button 
+                            type="button"
+                            (click)="confirmDeleteAlbum(album, $event)"
+                            class="touch-target-48 text-neutral-600 hover:text-rose-600 p-2.5 rounded-full hover:bg-rose-50 transition"
+                            title="Eliminar álbum"
+                            aria-label="Eliminar álbum"
+                          >
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      } @else {
+                        <span class="touch-target-48 text-neutral-400 group-hover:text-black group-hover:translate-x-0.5 transition shrink-0">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                          </svg>
+                        </span>
+                      }
+                    </div>
+                  </article>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- FREE-FORM CANVAS (LIENZO DE DISEÑO LIBRE PARA DESKTOP O MODO EDICIÓN) -->
         <div 
           #canvasContainer
           class="relative w-full transition-all duration-300 select-none pb-24 max-w-full overflow-x-hidden"
           [style.minHeight.px]="dynamicMinHeight()"
           [ngClass]="{
             'border-2 border-dashed border-amber-400/80 bg-amber-500/[0.02] rounded-3xl p-2 sm:p-4 shadow-inner': isEditLayoutMode(),
-            'border border-transparent': !isEditLayoutMode()
+            'border border-transparent': !isEditLayoutMode(),
+            'hidden md:block': !isEditLayoutMode()
           }"
         >
           <!-- Guía visual de fondo (Cuadrícula punteada editorial en modo edición) -->
@@ -235,14 +347,23 @@ import {
                     'aspect-[16/9]': !album.height && !isEditLayoutMode() && i % 5 === 4
                   }"
                 >
+                  <!-- Skeleton shimmer -->
+                  <div 
+                    class="absolute inset-0 skeleton-shimmer pointer-events-none transition-opacity duration-300"
+                    [class.opacity-0]="loadedImages()[album.id]"
+                  ></div>
                   <img 
                     [src]="albumService.getImageUrl(album.coverImageUrl || album.coverImage)" 
                     [alt]="album.name"
+                    (load)="onImageLoaded(album.id)"
                     class="w-full h-full object-cover select-none pointer-events-none transition-transform duration-700 ease-out"
                     [ngClass]="{
-                      'group-hover:scale-105': !isEditLayoutMode()
+                      'group-hover:scale-105': !isEditLayoutMode(),
+                      'opacity-0': !loadedImages()[album.id],
+                      'opacity-100': loadedImages()[album.id]
                     }"
                     loading="lazy"
+                    decoding="async"
                     draggable="false"
                   />
                 </div>
@@ -576,6 +697,13 @@ export class PortfolioComponent implements OnInit {
   selectedAlbumToEdit: Album | null = null;
   readonly albumToDelete = signal<Album | null>(null);
   readonly deletingAlbum = signal<boolean>(false);
+
+  // Control de placeholders para Zero CLS
+  readonly loadedImages = signal<Record<string, boolean>>({});
+
+  onImageLoaded(albumId: string) {
+    this.loadedImages.update(prev => ({ ...prev, [albumId]: true }));
+  }
 
   // Altura dinámica del contenedor padre basada en las posiciones Y de los álbumes
   readonly dynamicMinHeight = computed(() => {

@@ -107,27 +107,37 @@ import {
             </div>
           }
 
-          <!-- VISTA MÓVIL RESPONSIVE EN VISTA NORMAL (Pantallas < 640px) -->
+          <!-- VISTA MÓVIL RESPONSIVE EN VISTA NORMAL (Pantallas < 640px: 360px - 430px) -->
           @if (!isEditMode()) {
-            <div class="sm:hidden block p-3 space-y-6">
+            <div class="sm:hidden grid grid-cols-1 gap-4 p-2 sm:p-4 w-full">
               @for (photo of photosList(); track photo.id; let idx = $index) {
                 <div 
                   (click)="onPhotoClick(photo, $event)"
-                  class="relative bg-white rounded-xl shadow-sm border border-neutral-200/80 overflow-hidden cursor-pointer active:scale-[0.99] transition duration-200"
+                  class="relative bg-white rounded-2xl shadow-sm border border-neutral-200/80 overflow-hidden cursor-pointer active:scale-[0.99] transition duration-200"
                 >
                   <div class="aspect-[4/3] w-full overflow-hidden bg-neutral-100 relative">
+                    <!-- Skeleton shimmer placeholder -->
+                    <div 
+                      class="absolute inset-0 skeleton-shimmer pointer-events-none transition-opacity duration-300"
+                      [class.opacity-0]="loadedCanvasPhotos()[photo.id]"
+                    ></div>
                     <img
                       [src]="photo.url"
                       [alt]="photo.title || photo.caption || 'Fotografía'"
-                      class="w-full h-full object-cover select-none"
+                      (load)="onCanvasPhotoLoaded(photo.id)"
+                      class="w-full h-full object-cover select-none transition-transform duration-500 ease-out"
+                      [class.opacity-0]="!loadedCanvasPhotos()[photo.id]"
+                      [class.opacity-100]="loadedCanvasPhotos()[photo.id]"
                       loading="lazy"
+                      decoding="async"
                     />
                     @if (allowAdminToggle) {
                       <button
                         type="button"
                         (click)="onDeletePhoto(photo, $event)"
-                        class="absolute top-2 right-2 z-20 p-2 rounded-full bg-red-600/90 hover:bg-red-700 text-white shadow-md transition"
+                        class="touch-target-48 min-w-[48px] min-h-[48px] absolute top-2 right-2 z-20 p-2 rounded-full bg-red-600/90 hover:bg-red-700 text-white shadow-md transition flex items-center justify-center"
                         title="Eliminar fotografía"
+                        aria-label="Eliminar fotografía"
                       >
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -136,11 +146,11 @@ import {
                     }
                   </div>
                   @if (photo.caption || photo.title) {
-                    <div class="p-3 bg-white border-t border-neutral-100 flex items-center justify-between">
-                      <span class="inline-block bg-[#feea68] px-2 py-0.5 text-[11px] font-semibold text-neutral-900 tracking-tight shadow-sm rounded-sm">
+                    <div class="p-3.5 bg-white border-t border-neutral-100 flex items-center justify-between">
+                      <span class="inline-block bg-[#feea68] px-2.5 py-1 text-[11px] font-semibold text-neutral-900 tracking-tight shadow-sm rounded-sm truncate max-w-[70%]">
                         {{ photo.caption || photo.title }}
                       </span>
-                      <span class="text-[10px] text-neutral-400 font-mono font-medium uppercase">Ver en grande</span>
+                      <span class="text-[10px] text-neutral-400 font-mono font-medium uppercase shrink-0">Ver detalle</span>
                     </div>
                   }
                 </div>
@@ -548,8 +558,13 @@ export class PhotoCanvasComponent implements OnInit, OnChanges {
   readonly hasUnsavedChanges = signal<boolean>(false);
 
   photosList = signal<CanvasPhoto[]>([]);
+  readonly loadedCanvasPhotos = signal<Record<string | number, boolean>>({});
   private backupPhotos: CanvasPhoto[] = [];
   private highestZIndex = 1;
+
+  onCanvasPhotoLoaded(id: string | number) {
+    this.loadedCanvasPhotos.update(prev => ({ ...prev, [id]: true }));
+  }
 
   // Minimum dimensions
   readonly minWidth = 120;

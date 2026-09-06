@@ -15,6 +15,8 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
         <img 
           [src]="siteContentService.getImageUrl(siteContentService.content().heroBgUrl)" 
           alt="Dennis Wanderlight - The World, Unfiltered"
+          fetchpriority="high"
+          decoding="async"
           class="w-full h-full object-cover object-center will-change-transform"
           [style.transform]="'translate3d(0, ' + (parallaxOffset()) + 'px, 0) scale(1.08)'"
         />
@@ -27,9 +29,9 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
         <div class="absolute top-24 right-8 z-30">
           <button 
             (click)="editHero.emit()"
-            class="flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-black px-3.5 py-1.5 rounded-full text-xs font-bold shadow-lg transition transform hover:scale-105"
+            class="flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-black px-4 py-2.5 rounded-full text-xs font-bold shadow-lg transition transform hover:scale-105 min-h-[48px] touch-target-48"
           >
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
             </svg>
             <span>Editar Hero</span>
@@ -69,7 +71,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
         >
           <a 
             href="#portfolio" 
-            class="inline-flex items-center gap-3 bg-white text-neutral-900 px-6 sm:px-8 py-3 rounded-full text-xs sm:text-sm font-semibold tracking-wide shadow-xl hover:bg-neutral-100 hover:shadow-2xl transition duration-300 transform hover:-translate-y-0.5 group"
+            class="inline-flex items-center gap-3 bg-white text-neutral-900 px-6 sm:px-8 py-3.5 min-h-[48px] rounded-full text-xs sm:text-sm font-semibold tracking-wide shadow-xl hover:bg-neutral-100 hover:shadow-2xl transition duration-300 transform hover:-translate-y-0.5 group touch-target-48"
           >
             <span>{{ siteContentService.content().heroButtonText || 'Explore Projects' }}</span>
             <div class="w-3.5 h-3.5 rounded-full border-2 border-black flex items-center justify-center">
