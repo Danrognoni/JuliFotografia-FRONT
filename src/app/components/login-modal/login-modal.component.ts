@@ -42,7 +42,7 @@ import { ToastService } from '../../services/toast.service';
               [(ngModel)]="email" 
               name="email" 
               required 
-              placeholder="admin@denniswanderlight.com"
+              placeholder="admin@julietamarateo.com"
               class="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
             />
           </div>
@@ -63,7 +63,7 @@ import { ToastService } from '../../services/toast.service';
           <div class="p-3 bg-neutral-50 rounded-lg text-xs text-neutral-600 border border-neutral-200">
             <span class="font-semibold text-neutral-800">Credenciales por defecto:</span>
             <div class="mt-1 flex items-center justify-between">
-              <span><code>admin&#64;denniswanderlight.com</code> / <code>12345678</code></span>
+              <span><code>admin&#64;julietamarateo.com</code> / <code>12345678</code></span>
               <button 
                 type="button" 
                 (click)="fillDefaults()"
@@ -100,12 +100,12 @@ export class LoginModalComponent {
   private readonly authService = inject(AuthService);
   private readonly toastService = inject(ToastService);
 
-  email = 'admin@denniswanderlight.com';
+  email = 'admin@julietamarateo.com';
   password = '12345678';
   readonly loading = signal(false);
 
   fillDefaults() {
-    this.email = 'admin@denniswanderlight.com';
+    this.email = 'admin@julietamarateo.com';
     this.password = '12345678';
   }
 

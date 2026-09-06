@@ -30,8 +30,8 @@ export interface CompressionResult {
 const DEFAULT_OPTIONS: Required<CompressionOptions> = {
   maxDimension: 2048,
   quality: 0.82,
-  outputType: 'image/webp',
-  maxSizeBytes: 400 * 1024 // 400 KB
+  outputType: 'image/jpeg',
+  maxSizeBytes: 0
 };
 
 const ALLOWED_MIME_TYPES = [
@@ -57,6 +57,7 @@ export function isValidImageFile(file: File): boolean {
 
 /**
  * Comprime una imagen individual en el cliente antes del envío.
+ * Garantiza resolución máxima de 2048px, formato JPEG con calidad 0.82 y peso < 1.5 MB.
  */
 export async function compressImage(
   file: File,
@@ -88,21 +89,7 @@ export async function compressImage(
   const origWidth = image.naturalWidth || image.width;
   const origHeight = image.naturalHeight || image.height;
 
-  // Si la imagen ya es pequeña en peso y dentro de las dimensiones, conservarla
-  if (file.size <= options.maxSizeBytes && origWidth <= options.maxDimension && origHeight <= options.maxDimension) {
-    return {
-      file,
-      originalSize: file.size,
-      compressedSize: file.size,
-      savedBytes: 0,
-      reductionPercentage: 0,
-      width: origWidth,
-      height: origHeight,
-      isCompressed: false
-    };
-  }
-
-  // Calcular dimensiones manteniendo relación de aspecto
+  // Calcular dimensiones manteniendo relación de aspecto (máximo 2048px)
   let targetWidth = origWidth;
   let targetHeight = origHeight;
 
@@ -121,55 +108,47 @@ export async function compressImage(
   canvas.width = targetWidth;
   canvas.height = targetHeight;
 
-  const ctx = canvas.getContext('2d', { alpha: true });
+  const ctx = canvas.getContext('2d', { alpha: false });
   if (!ctx) {
     throw new Error('No se pudo inicializar el contexto 2D de Canvas');
   }
+
+  // Fondo blanco para prevenir transparencias negras al convertir a JPEG
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(0, 0, targetWidth, targetHeight);
 
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
 
-  // Intentar exportar a WebP
+  // Comprimir a JPEG con calidad 0.82
   let blob = await canvasToBlob(canvas, options.outputType, options.quality);
 
-  // Si el navegador no soporta exportar a WebP, fallback a JPEG
-  let finalType = options.outputType;
-  if (!blob || blob.type !== options.outputType) {
-    finalType = 'image/jpeg';
-    blob = await canvasToBlob(canvas, 'image/jpeg', options.quality);
+  if (!blob) {
+    // Fallback con toDataURL si toBlob no produce el blob
+    try {
+      const dataUrl = canvas.toDataURL(options.outputType, options.quality);
+      blob = dataURItoBlob(dataUrl);
+    } catch (e) {
+      console.warn('Fallback dataURI to blob falló:', e);
+    }
   }
 
   if (!blob) {
     throw new Error('Error al generar el Blob de imagen comprimida.');
   }
 
-  // Si por alguna razón la imagen comprimida resulta mayor que la original, conservar la original
-  if (blob.size >= file.size && origWidth <= options.maxDimension && origHeight <= options.maxDimension) {
-    return {
-      file,
-      originalSize: file.size,
-      compressedSize: file.size,
-      savedBytes: 0,
-      reductionPercentage: 0,
-      width: origWidth,
-      height: origHeight,
-      isCompressed: false
-    };
-  }
-
-  // Formar nombre de archivo con la extensión adecuada
-  const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
-  const extension = finalType === 'image/webp' ? '.webp' : '.jpg';
-  const newFileName = `${baseName}${extension}`;
-
+  // Formar archivo File con extensión .jpg y MIME type image/jpeg
+  const newFileName = file.name.replace(/\.[^/.]+$/, ".jpg");
   const compressedFile = new File([blob], newFileName, {
-    type: finalType,
+    type: 'image/jpeg',
     lastModified: Date.now()
   });
 
+  console.log('[Upload] Tamaño original:', file.size, 'Tamaño comprimido:', compressedFile.size);
+
   const savedBytes = Math.max(0, file.size - compressedFile.size);
-  const reductionPercentage = Math.round((savedBytes / file.size) * 100);
+  const reductionPercentage = file.size > 0 ? Math.round((savedBytes / file.size) * 100) : 0;
 
   return {
     file: compressedFile,
@@ -238,15 +217,25 @@ export function formatBytes(bytes: number, decimals = 1): string {
 
 function loadImageFromFile(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error('No se pudo decodificar el archivo de imagen'));
-      img.src = e.target?.result as string;
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(img);
     };
-    reader.onerror = () => reject(new Error('Error al leer el archivo'));
-    reader.readAsDataURL(file);
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const fallbackImg = new Image();
+        fallbackImg.onload = () => resolve(fallbackImg);
+        fallbackImg.onerror = () => reject(new Error('No se pudo decodificar el archivo de imagen'));
+        fallbackImg.src = e.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error('Error al leer el archivo'));
+      reader.readAsDataURL(file);
+    };
+    img.src = objectUrl;
   });
 }
 
@@ -255,3 +244,16 @@ function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number):
     canvas.toBlob((blob) => resolve(blob), type, quality);
   });
 }
+
+function dataURItoBlob(dataURI: string): Blob {
+  const parts = dataURI.split(',');
+  const byteString = atob(parts[1]);
+  const mimeString = parts[0].split(':')[1].split(';')[0];
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  for (let i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i);
+  }
+  return new Blob([ab], { type: mimeString });
+}
+

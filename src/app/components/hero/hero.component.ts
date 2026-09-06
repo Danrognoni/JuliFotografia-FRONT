@@ -14,7 +14,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
       <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <img 
           [src]="siteContentService.getImageUrl(siteContentService.content().heroBgUrl)" 
-          alt="Dennis Wanderlight - The World, Unfiltered"
+          alt="JulietaMarateo - The World, Unfiltered"
           fetchpriority="high"
           decoding="async"
           class="w-full h-full object-cover object-center will-change-transform"

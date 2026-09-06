@@ -91,7 +91,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
                   <div>
                     <span class="text-xs font-semibold uppercase tracking-wider text-neutral-400 block">Email Directo</span>
                     <a [href]="'mailto:' + siteContentService.content().contactEmail" class="text-sm font-medium text-neutral-900 hover:underline">
-                      {{ siteContentService.content().contactEmail || 'hello@denniswanderlight.com' }}
+                      {{ siteContentService.content().contactEmail || 'contacto@julietamarateo.com' }}
                     </a>
                   </div>
                 </div>

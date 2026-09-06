@@ -5,8 +5,8 @@ import { environment } from '../../environments/environment';
 import { SiteContent } from '../models/site-content.model';
 
 const defaultSiteContent: SiteContent = {
-  brandName: 'Dennis Wanderlight',
-  brandTagline: 'Travel & Documentary',
+  brandName: 'JulietaMarateo',
+  brandTagline: 'Fotografía Profesional & Documental',
   heroTitle: 'The World, Unfiltered',
   heroSubtitle: 'Journeys captured beyond the postcard view',
   heroButtonText: 'Explore Projects',
@@ -29,22 +29,22 @@ const defaultSiteContent: SiteContent = {
   storyBgUrl: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=2000&q=85',
   storyPortraitUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=85',
 
-  aboutTitle: 'Dennis Wanderlight',
-  aboutSubtitle: 'Travel & Documentary Photographer',
-  aboutBio: 'Dennis Wanderlight is an independent travel and documentary photographer focused on capturing the raw, unscripted beauty of remote landscapes and human culture. From high alpine passes in the Andes to rainy twilight streets in Tokyo, Dennis seeks stories that exist beyond the conventional postcard perspective.',
+  aboutTitle: 'JulietaMarateo',
+  aboutSubtitle: 'Fotógrafa Profesional & Documental',
+  aboutBio: 'JulietaMarateo es una fotógrafa profesional enfocada en capturar momentos únicos, emociones reales e historias visuales con una perspectiva sensible y auténtica.',
   aboutQuote: 'Photography is not about documenting places; it\'s about holding on to the ephemeral light and silent narratives that define who we are.',
   aboutImageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=85',
 
   contactTitle: 'Get in Touch',
   contactSubtitle: 'Available for worldwide expeditions, editorial assignments and fine art print commissions.',
-  contactEmail: 'hello@denniswanderlight.com',
+  contactEmail: 'contacto@julietamarateo.com',
   contactPhone: '+1 (555) 349-2810',
   contactLocation: 'Tokyo · Patagonia · Worldwide',
-  instagramHandle: '@denniswanderlight',
+  instagramHandle: '@julietamarateo',
   whatsappNumber: '+15553492810',
 
   footerText: 'Journeys captured beyond the postcard view. All images shot on location worldwide.',
-  copyrightText: '© 2026 Dennis Wanderlight. All rights reserved.'
+  copyrightText: '© 2026 JulietaMarateo. Todos los derechos reservados.'
 };
 
 @Injectable({

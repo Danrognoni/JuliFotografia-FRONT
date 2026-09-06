@@ -30,7 +30,7 @@ import { AuthService } from '../../services/auth.service';
           <div>
             <div class="flex items-center gap-3">
               <span class="text-xl font-extrabold tracking-tight text-white">
-                {{ siteContentService.content().brandName || 'Dennis Wanderlight' }}
+                {{ siteContentService.content().brandName || 'JulietaMarateo' }}
               </span>
               <div class="aperture-icon text-white"></div>
             </div>
@@ -61,7 +61,7 @@ import { AuthService } from '../../services/auth.service';
 
         <!-- Copyright & Admin Access Hint -->
         <div class="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500">
-          <span>{{ siteContentService.content().copyrightText || '© 2026 Dennis Wanderlight. All rights reserved.' }}</span>
+          <span>{{ siteContentService.content().copyrightText || '© 2026 JulietaMarateo. Todos los derechos reservados.' }}</span>
           
           <div class="flex items-center gap-4">
             <button 
@@ -71,7 +71,7 @@ import { AuthService } from '../../services/auth.service';
               {{ authService.isAdmin() ? 'Panel Admin Conectado' : 'Acceso Administrador' }}
             </button>
             <span>·</span>
-            <span>Dennis Wanderlight Photography Platform</span>
+            <span>JulietaMarateo Photography Platform</span>
           </div>
         </div>
       </div>

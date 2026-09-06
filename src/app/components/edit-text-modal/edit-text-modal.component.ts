@@ -160,8 +160,12 @@ export class EditTextModalComponent {
       try {
         const result = await compressImage(originalFile, {
           maxDimension: 2048,
-          quality: 0.82
+          quality: 0.82,
+          outputType: 'image/jpeg'
         });
+
+        const compressedFile = result.file;
+        console.log('[Upload] Tamaño original:', originalFile.size, 'Tamaño comprimido:', compressedFile.size);
 
         if (result.isCompressed && result.savedBytes > 0) {
           const origStr = formatBytes(result.originalSize);
@@ -171,21 +175,24 @@ export class EditTextModalComponent {
           this.toastService.info('Subiendo imagen...');
         }
 
-        this.siteContentService.uploadImage(result.file, key).subscribe({
+        this.siteContentService.uploadImage(compressedFile, key).subscribe({
           next: (res) => {
             this.uploading.set(false);
             this.formData[key] = res.url;
             this.toastService.success('Imagen subida con éxito');
             target.value = '';
           },
-          error: () => {
+          error: (err) => {
             this.uploading.set(false);
-            this.toastService.error('Error al subir la imagen');
+            const serverMsg = err?.error?.message || err?.message || 'Error al subir la imagen';
+            console.error('[Upload] Error del servidor al subir:', err);
+            this.toastService.error(`Fallo de subida: ${serverMsg}`);
           }
         });
-      } catch (err) {
+      } catch (err: any) {
         this.uploading.set(false);
-        this.toastService.error('Error al procesar la imagen');
+        console.error('[Upload] Error al optimizar la imagen:', err);
+        this.toastService.error(`Error al procesar la imagen: ${err?.message || ''}`);
       }
     }
   }

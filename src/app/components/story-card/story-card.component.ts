@@ -14,7 +14,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
       <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <img 
           [src]="siteContentService.getImageUrl(siteContentService.content().storyBgUrl)" 
-          alt="Dennis Wanderlight - Beyond the frame"
+          alt="JulietaMarateo - Beyond the frame"
           class="w-full h-full object-cover object-center will-change-transform"
           [style.transform]="'translate3d(0, ' + parallaxOffset() + 'px, 0) scale(1.18)'"
         />
@@ -56,11 +56,11 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
           class="order-1 md:order-2 flex flex-col items-center"
         >
           <div class="relative w-full max-w-[280px] sm:max-w-xs md:w-96 rounded-none shadow-2xl overflow-hidden bg-neutral-900 group">
-            <!-- Portrait of Dennis -->
+            <!-- Portrait of Julieta -->
             <div class="aspect-[4/5] overflow-hidden">
               <img 
                 [src]="siteContentService.getImageUrl(siteContentService.content().storyPortraitUrl)" 
-                alt="Dennis Wanderlight Portrait"
+                alt="JulietaMarateo Portrait"
                 class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out"
               />
             </div>

@@ -65,7 +65,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
               [revealDelay]="140"
               class="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-neutral-900 leading-tight"
             >
-              {{ siteContentService.content().aboutTitle || 'Dennis Wanderlight' }}
+              {{ siteContentService.content().aboutTitle || 'JulietaMarateo' }}
             </h2>
             <p 
               appScrollReveal="fade-up"

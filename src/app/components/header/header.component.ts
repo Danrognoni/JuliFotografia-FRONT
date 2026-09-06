@@ -32,7 +32,7 @@ import { AuthService } from '../../services/auth.service';
                 class="font-bold tracking-widest uppercase text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)] transition-all duration-300"
                 [ngClass]="isScrolled() ? 'text-xs sm:text-xs' : 'text-xs sm:text-sm'"
               >
-                {{ siteContentService.content().brandName || 'Julieta Marateo' }}
+                {{ siteContentService.content().brandName || 'JulietaMarateo' }}
               </span>
               <span 
                 class="font-light tracking-wider text-white/80 drop-shadow-[0_1px_4px_rgba(0,0,0,0.7)] mt-0.5 transition-all duration-300"

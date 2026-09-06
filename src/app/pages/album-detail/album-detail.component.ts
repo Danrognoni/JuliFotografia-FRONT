@@ -29,7 +29,7 @@ import { compressImages, formatBytes } from '../../utils/image-compression.util'
               routerLink="/" 
               class="text-xs sm:text-sm font-bold tracking-wider text-neutral-900 hover:opacity-70 transition flex items-center gap-2"
             >
-              <span>{{ siteContentService.content().brandName || 'Dennis Wanderlight' }}</span>
+              <span>{{ siteContentService.content().brandName || 'JulietaMarateo' }}</span>
               <span class="inline-block w-1.5 h-1.5 rounded-full bg-black"></span>
             </a>
           </div>
