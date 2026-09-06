@@ -577,6 +577,17 @@ import {
       user-select: none;
     }
 
+    .rotate-handle::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 44px;
+      height: 44px;
+      touch-action: none;
+    }
+
     .rotate-handle:hover {
       transform: translateX(-50%) scale(1.18);
       background-color: #feea68;
@@ -597,6 +608,17 @@ import {
       transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
       touch-action: none;
       user-select: none;
+    }
+
+    .resize-handle::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 36px;
+      height: 36px;
+      touch-action: none;
     }
 
     .resize-handle:hover {

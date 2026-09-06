@@ -18,7 +18,10 @@ export class AuthService {
   readonly isAuthenticated = computed(() => !!this.token());
   readonly isAdmin = computed(() => {
     const user = this.currentUser();
-    return !!user && (user.role === 'ROLE_ADMIN' || user.role === 'ADMIN');
+    const token = this.token();
+    return !!token && !!user &&
+      user.email?.toLowerCase() === 'julietamarateo4@gmail.com' &&
+      (user.role === 'ROLE_ADMIN' || user.role === 'ADMIN');
   });
 
   private getInitialToken(): string | null {

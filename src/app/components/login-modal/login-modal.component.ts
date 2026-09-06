@@ -35,79 +35,59 @@ import { ToastService } from '../../services/toast.service';
         </div>
 
         <form (ngSubmit)="onSubmit()" class="space-y-4">
-          <div>
-            <label class="block text-xs font-medium text-neutral-700 uppercase tracking-wider mb-1">Correo Electrónico</label>
-            <input 
-              type="email" 
-              [(ngModel)]="email" 
-              name="email" 
-              required 
-              placeholder="admin@julietamarateo.com"
-              class="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
-            />
-          </div>
-
-          <div>
-            <label class="block text-xs font-medium text-neutral-700 uppercase tracking-wider mb-1">Contraseña</label>
-            <input 
-              type="password" 
-              [(ngModel)]="password" 
-              name="password" 
-              required 
-              placeholder="••••••••"
-              class="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
-            />
-          </div>
-
-          <!-- Credenciales sugeridas para prueba -->
-          <div class="p-3 bg-neutral-50 rounded-lg text-xs text-neutral-600 border border-neutral-200">
-            <span class="font-semibold text-neutral-800">Credenciales por defecto:</span>
-            <div class="mt-1 flex items-center justify-between">
-              <span><code>admin&#64;julietamarateo.com</code> / <code>12345678</code></span>
-              <button 
-                type="button" 
-                (click)="fillDefaults()"
-                class="text-xs text-black underline hover:font-bold transition"
-              >
-                Autocompletar
-              </button>
+            <div>
+              <label class="block text-xs font-medium text-neutral-700 uppercase tracking-wider mb-1">Correo Electrónico</label>
+              <input 
+                type="email" 
+                [(ngModel)]="email" 
+                name="email" 
+                required 
+                placeholder="nombre@ejemplo.com"
+                class="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
+              />
             </div>
-          </div>
 
-          <button 
-            type="submit" 
-            [disabled]="loading()"
-            class="w-full py-3 bg-black text-white text-sm font-semibold rounded-lg hover:bg-neutral-800 transition disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            @if (loading()) {
-              <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <span>Verificando...</span>
-            } @else {
-              <span>Entrar al Panel Admin</span>
-            }
-          </button>
-        </form>
+            <div>
+              <label class="block text-xs font-medium text-neutral-700 uppercase tracking-wider mb-1">Contraseña</label>
+              <input 
+                type="password" 
+                [(ngModel)]="password" 
+                name="password" 
+                required 
+                placeholder="••••••••"
+                class="w-full px-3.5 py-2.5 rounded-lg border border-neutral-300 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              [disabled]="loading()"
+              class="w-full py-3 bg-black text-white text-sm font-semibold rounded-lg hover:bg-neutral-800 transition disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
+            >
+              @if (loading()) {
+                <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Verificando...</span>
+              } @else {
+                <span>Iniciar Sesión</span>
+              }
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
-  `
-})
-export class LoginModalComponent {
-  @Output() close = new EventEmitter<void>();
+    `
+  })
+  export class LoginModalComponent {
+    @Output() close = new EventEmitter<void>();
 
-  private readonly authService = inject(AuthService);
-  private readonly toastService = inject(ToastService);
+    private readonly authService = inject(AuthService);
+    private readonly toastService = inject(ToastService);
 
-  email = 'admin@julietamarateo.com';
-  password = '12345678';
-  readonly loading = signal(false);
-
-  fillDefaults() {
-    this.email = 'admin@julietamarateo.com';
-    this.password = '12345678';
-  }
+    email = '';
+    password = '';
+    readonly loading = signal(false);
 
   onSubmit() {
     if (!this.email || !this.password) {

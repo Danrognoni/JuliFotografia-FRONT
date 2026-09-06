@@ -91,7 +91,7 @@ import { compressImages, formatBytes } from '../../utils/image-compression.util'
         } @else {
           
           <!-- ALBUM HEADER: MONUMENTAL EDITORIAL TITLE & NARRATIVE (SCREENSHOT 2 REPLICA) -->
-          <section class="max-w-7xl mx-auto px-4 sm:px-8 mb-14 sm:mb-20">
+          <section class="max-w-7xl mx-auto px-4 sm:px-8 mb-14 sm:mb-20 max-w-full overflow-x-hidden">
             
             <!-- Admin Top Controls -->
             @if (authService.isAdmin()) {
@@ -124,20 +124,20 @@ import { compressImages, formatBytes } from '../../utils/image-compression.util'
 
             <!-- Subtitle / Location Kicker -->
             @if (album()!.subtitle) {
-              <span class="text-xs sm:text-sm font-semibold tracking-wider text-neutral-500 uppercase block mb-2">
+              <span class="text-xs sm:text-sm font-semibold tracking-wider text-neutral-500 uppercase block mb-2 break-words">
                 {{ album()!.subtitle }}
               </span>
             }
 
             <!-- Massive Editorial Title -->
-            <h1 class="text-4xl sm:text-6xl md:text-7xl lg:text-[5.25rem] font-bold text-neutral-900 tracking-tight leading-[1.05] mb-8 sm:mb-12">
+            <h1 class="text-3xl sm:text-5xl md:text-6xl lg:text-[5.25rem] font-bold text-neutral-900 tracking-tight leading-[1.05] mb-6 sm:mb-12 break-words">
               {{ album()!.title || album()!.name }}
             </h1>
 
             <!-- Narrative Paragraph Block (Right Aligned / Offset, matching reference) -->
             <div class="flex justify-end">
               <div class="w-full md:w-3/5 lg:w-1/2">
-                <p class="text-sm sm:text-base text-neutral-700 leading-relaxed font-normal">
+                <p class="text-sm sm:text-base text-neutral-700 leading-relaxed font-normal break-words">
                   {{ album()!.description || "This is the space to provide an in-depth look at the visual narrative and the details within the frame. Show the inspiration that led to this moment, and what you hope to communicate to your audience through this specific piece. You can use this section to share a particular feature that sets it apart from others or highlight a unique part of the creative process." }}
                 </p>
               </div>
@@ -166,7 +166,7 @@ import { compressImages, formatBytes } from '../../utils/image-compression.util'
             </div>
           } @else {
             <!-- FREE-FORM EDITORIAL PHOTO CANVAS (EXPANDIDO AL 100% DE ANCHO) -->
-            <section class="w-full px-2 sm:px-4 md:px-6">
+            <section class="w-full px-2 sm:px-4 md:px-6 max-w-full overflow-x-hidden">
               <app-photo-canvas
                 #photoCanvas
                 [photos]="canvasPhotos()"
