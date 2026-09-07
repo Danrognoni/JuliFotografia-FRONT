@@ -736,6 +736,12 @@ export class PortfolioComponent implements OnInit {
   });
 
   ngOnInit() {
+    // Aplicar coordenadas inmediatamente a los álbumes precargados (default o caché)
+    if (this.albumService.albums().length > 0) {
+      this.ensureInitialCoordinates(this.albumService.albums());
+    }
+
+    // Revalidación silenciosa en segundo plano
     this.albumService.loadAlbums().subscribe(albums => {
       this.ensureInitialCoordinates(albums);
     });

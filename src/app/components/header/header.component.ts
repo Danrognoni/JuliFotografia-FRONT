@@ -32,13 +32,13 @@ import { AuthService } from '../../services/auth.service';
                 class="font-bold tracking-widest uppercase text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)] transition-all duration-300"
                 [ngClass]="isScrolled() ? 'text-xs sm:text-xs' : 'text-xs sm:text-sm'"
               >
-                {{ siteContentService.content().brandName || 'JulietaMarateo' }}
+                {{ siteContentService.content().brandName || 'Julieta Marateo' }}
               </span>
               <span 
                 class="font-light tracking-wider text-white/80 drop-shadow-[0_1px_4px_rgba(0,0,0,0.7)] mt-0.5 transition-all duration-300"
                 [ngClass]="isScrolled() ? 'text-[9px] sm:text-[10px]' : 'text-[10px] sm:text-[11px]'"
               >
-                {{ siteContentService.content().brandTagline || 'Fotografía & Expediciones' }}
+                {{ siteContentService.content().brandTagline || 'Fotografía' }}
               </span>
             </div>
             <div class="aperture-icon text-white/90 ml-1.5 drop-shadow"></div>
@@ -70,7 +70,7 @@ import { AuthService } from '../../services/auth.service';
             href="#home" 
             class="px-3.5 py-1.5 text-xs font-medium text-white/90 hover:text-white transition tracking-wider uppercase hover:underline underline-offset-4 drop-shadow-[0_1px_4px_rgba(0,0,0,0.7)]"
           >
-            {{ siteContentService.content().menuHome || 'Home' }}
+            {{ siteContentService.content().menuHome || 'Inicio' }}
           </a>
 
           <a 
@@ -84,7 +84,7 @@ import { AuthService } from '../../services/auth.service';
             href="#about" 
             class="px-3.5 py-1.5 text-xs font-medium text-white/90 hover:text-white transition tracking-wider uppercase hover:underline underline-offset-4 drop-shadow-[0_1px_4px_rgba(0,0,0,0.7)]"
           >
-            {{ siteContentService.content().menuAbout || 'About' }}
+            {{ siteContentService.content().menuAbout || 'Sobre mí' }}
           </a>
 
           <a 
@@ -98,7 +98,7 @@ import { AuthService } from '../../services/auth.service';
             href="#contact" 
             class="px-3.5 py-1.5 text-xs font-medium text-white/90 hover:text-white transition tracking-wider uppercase hover:underline underline-offset-4 drop-shadow-[0_1px_4px_rgba(0,0,0,0.7)]"
           >
-            {{ siteContentService.content().menuContact || 'Contact' }}
+            {{ siteContentService.content().menuContact || 'Contacto' }}
           </a>
 
           <!-- Subtle Admin Lock Button -->
@@ -167,7 +167,7 @@ import { AuthService } from '../../services/auth.service';
               href="#home" 
               class="text-xs font-semibold tracking-widest uppercase text-neutral-200 hover:text-white px-3 py-3 min-h-[48px] flex items-center justify-between border-b border-white/10 active:bg-white/10 rounded-lg transition touch-target-48"
             >
-              <span>{{ siteContentService.content().menuHome || 'Home' }}</span>
+              <span>{{ siteContentService.content().menuHome || 'Inicio' }}</span>
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400/80"></span>
             </a>
             <a 
@@ -183,7 +183,7 @@ import { AuthService } from '../../services/auth.service';
               href="#about" 
               class="text-xs font-semibold tracking-widest uppercase text-neutral-200 hover:text-white px-3 py-3 min-h-[48px] flex items-center justify-between border-b border-white/10 active:bg-white/10 rounded-lg transition touch-target-48"
             >
-              <span>{{ siteContentService.content().menuAbout || 'About' }}</span>
+              <span>{{ siteContentService.content().menuAbout || 'Sobre mí' }}</span>
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400/80"></span>
             </a>
             <a 
@@ -199,7 +199,7 @@ import { AuthService } from '../../services/auth.service';
               href="#contact" 
               class="text-xs font-semibold tracking-widest uppercase text-neutral-200 hover:text-white px-3 py-3 min-h-[48px] flex items-center justify-between active:bg-white/10 rounded-lg transition touch-target-48"
             >
-              <span>{{ siteContentService.content().menuContact || 'Contact' }}</span>
+              <span>{{ siteContentService.content().menuContact || 'Contacto' }}</span>
               <span class="w-1.5 h-1.5 rounded-full bg-amber-400/80"></span>
             </a>
           </div>

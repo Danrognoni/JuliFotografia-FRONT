@@ -51,7 +51,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
           [revealDelay]="60"
           class="text-white font-extralight tracking-widest sm:tracking-[0.18em] uppercase text-3xl sm:text-5xl md:text-7xl lg:text-[5.5rem] leading-tight drop-shadow-[0_2px_14px_rgba(0,0,0,0.85)] select-none max-w-5xl mx-auto break-words"
         >
-          {{ siteContentService.content().heroTitle || 'The World, Unfiltered' }}
+          {{ siteContentService.content().heroTitle || 'Naturaleza sin filtro' }}
         </h1>
 
         <!-- Subtitle -->
@@ -60,7 +60,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
           [revealDelay]="180"
           class="mt-4 sm:mt-6 text-white/90 text-sm sm:text-base md:text-lg font-light tracking-wider drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)] max-w-2xl mx-auto"
         >
-          {{ siteContentService.content().heroSubtitle || 'Journeys captured beyond the postcard view' }}
+          {{ siteContentService.content().heroSubtitle || 'Registros vívidos' }}
         </p>
 
         <!-- Pill Button with Target Dot Icon -->
@@ -73,7 +73,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
             href="#portfolio" 
             class="inline-flex items-center gap-3 bg-white text-neutral-900 px-6 sm:px-8 py-3.5 min-h-[48px] rounded-full text-xs sm:text-sm font-semibold tracking-wide shadow-xl hover:bg-neutral-100 hover:shadow-2xl transition duration-300 transform hover:-translate-y-0.5 group touch-target-48"
           >
-            <span>{{ siteContentService.content().heroButtonText || 'Explore Projects' }}</span>
+            <span>{{ siteContentService.content().heroButtonText || 'Explorar proyectos' }}</span>
             <div class="w-3.5 h-3.5 rounded-full border-2 border-black flex items-center justify-center">
               <div class="w-1 h-1 rounded-full bg-black group-hover:scale-125 transition"></div>
             </div>

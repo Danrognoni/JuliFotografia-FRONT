@@ -29,7 +29,7 @@ import { compressImages, formatBytes } from '../../utils/image-compression.util'
               routerLink="/" 
               class="text-xs sm:text-sm font-bold tracking-wider text-neutral-900 hover:opacity-70 transition flex items-center gap-2"
             >
-              <span>{{ siteContentService.content().brandName || 'JulietaMarateo' }}</span>
+              <span>{{ siteContentService.content().brandName || 'Julieta Marateo' }}</span>
               <span class="inline-block w-1.5 h-1.5 rounded-full bg-black"></span>
             </a>
           </div>
@@ -37,7 +37,7 @@ import { compressImages, formatBytes } from '../../utils/image-compression.util'
           <!-- Nav Links -->
           <nav class="flex items-center gap-6 sm:gap-8 text-xs font-semibold tracking-wide">
             <a routerLink="/" class="text-neutral-600 hover:text-black transition">
-              {{ siteContentService.content().menuHome || 'Home' }}
+              {{ siteContentService.content().menuHome || 'Inicio' }}
             </a>
             <a routerLink="/" fragment="portfolio" class="text-black font-bold transition flex items-center gap-1">
               <span>{{ siteContentService.content().menuPortfolio || 'Portfolio' }}</span>
@@ -46,10 +46,10 @@ import { compressImages, formatBytes } from '../../utils/image-compression.util'
               </svg>
             </a>
             <a routerLink="/" fragment="about" class="text-neutral-600 hover:text-black transition hidden sm:inline">
-              {{ siteContentService.content().menuAbout || 'About' }}
+              {{ siteContentService.content().menuAbout || 'Sobre mí' }}
             </a>
             <a routerLink="/" fragment="contact" class="text-neutral-600 hover:text-black transition hidden sm:inline">
-              {{ siteContentService.content().menuContact || 'Contact' }}
+              {{ siteContentService.content().menuContact || 'Contacto' }}
             </a>
 
             <!-- Return Button -->
@@ -498,14 +498,23 @@ export class AlbumDetailComponent implements OnInit, OnDestroy {
   }
 
   fetchAlbum(id: string) {
-    this.loading.set(true);
+    const preloaded = this.albumService.albums().find(a => a.id === id);
+    if (preloaded) {
+      this.album.set(preloaded);
+      this.loading.set(false);
+    } else {
+      this.loading.set(true);
+    }
+
     this.albumService.getAlbumById(id).subscribe({
       next: (data) => {
-        this.album.set(data);
+        if (data && data.id) {
+          this.album.set(data);
+        }
         this.loading.set(false);
       },
       error: (err) => {
-        console.error('Error fetching album', err);
+        console.warn('[AlbumDetail] Error o demora en cold-start al obtener álbum. Manteniendo datos locales.', err);
         this.loading.set(false);
       }
     });

@@ -45,7 +45,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
           class="md:w-1/4 text-center md:text-left order-2 md:order-1"
         >
           <span class="text-white text-lg sm:text-xl font-medium tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
-            {{ siteContentService.content().storyKickerLeft || 'Beyond the frame' }}
+            {{ siteContentService.content().storyKickerLeft || 'Detrás del lente' }}
           </span>
         </div>
 
@@ -60,7 +60,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
             <div class="aspect-[4/5] overflow-hidden">
               <img 
                 [src]="siteContentService.getImageUrl(siteContentService.content().storyPortraitUrl)" 
-                alt="JulietaMarateo Portrait"
+                alt="Julieta Marateo Portrait"
                 class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700 ease-out"
               />
             </div>
@@ -71,7 +71,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
               class="w-full bg-white text-neutral-900 px-5 py-3 min-h-[44px] flex items-center justify-between hover:bg-neutral-100 transition duration-200 active:bg-neutral-200"
             >
               <span class="text-sm font-semibold tracking-wide">
-                {{ siteContentService.content().storyButtonText || 'My Story' }}
+                {{ siteContentService.content().storyButtonText || 'Sobre mí' }}
               </span>
               <div class="aperture-icon text-black"></div>
             </a>
@@ -85,7 +85,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
           class="md:w-1/4 text-center md:text-right order-3"
         >
           <span class="text-white text-lg sm:text-xl font-medium tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
-            {{ siteContentService.content().storyKickerRight || 'Stories in motion' }}
+            {{ siteContentService.content().storyKickerRight || 'Detrás del lente' }}
           </span>
         </div>
       </div>

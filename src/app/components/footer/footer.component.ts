@@ -30,38 +30,38 @@ import { AuthService } from '../../services/auth.service';
           <div>
             <div class="flex items-center gap-3">
               <span class="text-xl font-extrabold tracking-tight text-white">
-                {{ siteContentService.content().brandName || 'JulietaMarateo' }}
+                {{ siteContentService.content().brandName || 'Julieta Marateo' }}
               </span>
               <div class="aperture-icon text-white"></div>
             </div>
             <p class="text-xs text-neutral-400 mt-2 max-w-sm">
-              {{ siteContentService.content().footerText || 'Journeys captured beyond the postcard view. All images shot on location worldwide.' }}
+              {{ siteContentService.content().footerText || 'Registros fotográficos y postproducción visual.' }}
             </p>
           </div>
 
           <!-- Quick Navigation Links -->
           <nav class="flex flex-wrap items-center gap-6 text-xs font-semibold uppercase tracking-wider text-neutral-400">
             <a href="#home" class="hover:text-white transition">
-              {{ siteContentService.content().menuHome || 'Home' }}
+              {{ siteContentService.content().menuHome || 'Inicio' }}
             </a>
             <a href="#portfolio" class="hover:text-white transition">
               {{ siteContentService.content().menuPortfolio || 'Portfolio' }}
             </a>
             <a href="#about" class="hover:text-white transition">
-              {{ siteContentService.content().menuAbout || 'About' }}
+              {{ siteContentService.content().menuAbout || 'Sobre mí' }}
             </a>
             <a href="#faq" class="hover:text-white transition">
               FAQ
             </a>
             <a href="#contact" class="hover:text-white transition">
-              {{ siteContentService.content().menuContact || 'Contact' }}
+              {{ siteContentService.content().menuContact || 'Contacto' }}
             </a>
           </nav>
         </div>
 
         <!-- Copyright & Admin Access Hint -->
         <div class="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500">
-          <span>{{ siteContentService.content().copyrightText || '© 2026 JulietaMarateo. Todos los derechos reservados.' }}</span>
+          <span>{{ siteContentService.content().copyrightText || '© 2026 Julieta Marateo. Todos los derechos reservados.' }}</span>
           
           <div class="flex items-center gap-4">
             <button 
@@ -71,7 +71,7 @@ import { AuthService } from '../../services/auth.service';
               {{ authService.isAdmin() ? 'Panel Admin Conectado' : 'Acceso Administrador' }}
             </button>
             <span>·</span>
-            <span>JulietaMarateo Photography Platform</span>
+            <span>Julieta Marateo Photography Platform</span>
           </div>
         </div>
       </div>

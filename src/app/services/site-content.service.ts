@@ -4,18 +4,20 @@ import { Observable, tap, catchError, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { SiteContent } from '../models/site-content.model';
 
-const defaultSiteContent: SiteContent = {
-  brandName: 'JulietaMarateo',
-  brandTagline: 'Fotografía Profesional & Documental',
-  heroTitle: 'The World, Unfiltered',
-  heroSubtitle: 'Journeys captured beyond the postcard view',
-  heroButtonText: 'Explore Projects',
-  heroBgUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=2000&q=85',
+const CACHE_KEY = 'site_content_cache';
 
-  menuHome: 'Home',
+const defaultSiteContent: SiteContent = {
+  brandName: 'Julieta Marateo',
+  brandTagline: 'Fotógrafa',
+  heroTitle: 'Naturaleza sin filtro',
+  heroSubtitle: 'Registros vívidos',
+  heroButtonText: 'Explorar proyectos',
+  heroBgUrl: 'https://res.cloudinary.com/xsfcv0a8/image/upload/v1788658367/site/ryibo8ddjsca8zpfdb59.jpg',
+
+  menuHome: 'Inicio',
   menuPortfolio: 'Portfolio',
-  menuAbout: 'About',
-  menuContact: 'Contact',
+  menuAbout: 'Sobre mí',
+  menuContact: 'Contacto',
 
   vignettesKicker: 'Vignettes from the edge',
   vignettesTitle: 'A curated selection of recent expeditions and untold stories',
@@ -23,28 +25,28 @@ const defaultSiteContent: SiteContent = {
   vignettesImage1: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=85',
   vignettesImage2: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=1200&q=85',
 
-  storyKickerLeft: 'Beyond the frame',
-  storyKickerRight: 'Stories in motion',
-  storyButtonText: 'My Story',
-  storyBgUrl: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=2000&q=85',
-  storyPortraitUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=85',
+  storyKickerLeft: 'Detrás del lente',
+  storyKickerRight: 'Detrás del lente',
+  storyButtonText: 'Sobre mí',
+  storyBgUrl: 'https://res.cloudinary.com/xsfcv0a8/image/upload/v1788656197/site/lobtvkppkun6meckqaxn.jpg',
+  storyPortraitUrl: 'https://res.cloudinary.com/xsfcv0a8/image/upload/v1788656154/site/lvocwcaiykaddo0byyjj.jpg',
 
-  aboutTitle: 'JulietaMarateo',
-  aboutSubtitle: 'Fotógrafa Profesional & Documental',
-  aboutBio: 'JulietaMarateo es una fotógrafa profesional enfocada en capturar momentos únicos, emociones reales e historias visuales con una perspectiva sensible y auténtica.',
-  aboutQuote: 'Photography is not about documenting places; it\'s about holding on to the ephemeral light and silent narratives that define who we are.',
-  aboutImageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=85',
+  aboutTitle: 'Julieta Marateo',
+  aboutSubtitle: 'Técnica en fotografía',
+  aboutBio: 'Trabajo como fotógrafa independiente, y como tal, me encargo tanto del registro fotográfico, como de su postproducción. Soy una aficionada del arte, y me interesa variar en los recursos estéticos y técnicos que utilizo, aportándoles un dinamismo y una frescura diferente a cada uno de mis proyectos.',
+  aboutQuote: 'Todavía no estoy inspirada',
+  aboutImageUrl: 'https://res.cloudinary.com/xsfcv0a8/image/upload/v1788737011/site/ah992tuac0awzfyo7db5.jpg',
 
-  contactTitle: 'Get in Touch',
-  contactSubtitle: 'Available for worldwide expeditions, editorial assignments and fine art print commissions.',
-  contactEmail: 'contacto@julietamarateo.com',
-  contactPhone: '+1 (555) 349-2810',
-  contactLocation: 'Tokyo · Patagonia · Worldwide',
-  instagramHandle: '@julietamarateo',
-  whatsappNumber: '+15553492810',
+  contactTitle: '¡Contactate conmigo!',
+  contactSubtitle: '¡Si tenés una idea en mente, no dudes en comunicarte conmigo! Estoy a tu disposición para crear un proyecto junta/os.',
+  contactEmail: 'julietamarateo4@gmail.com',
+  contactPhone: '+54 2281 311917',
+  contactLocation: 'Mar del Plata, Argentina.',
+  instagramHandle: '@julietamph_',
+  whatsappNumber: '+54 2281 311917',
 
   footerText: 'Journeys captured beyond the postcard view. All images shot on location worldwide.',
-  copyrightText: '© 2026 JulietaMarateo. Todos los derechos reservados.'
+  copyrightText: '© 2026 Julieta Marateo. All rights reserved.'
 };
 
 @Injectable({
@@ -53,20 +55,45 @@ const defaultSiteContent: SiteContent = {
 export class SiteContentService {
   private readonly http = inject(HttpClient);
 
-  readonly content = signal<SiteContent>(defaultSiteContent);
+  readonly content = signal<SiteContent>(this.getInitialContent());
   readonly loading = signal<boolean>(false);
 
+  /**
+   * Carga inicial inmediata: Lee localStorage (Stale) o recurre a los defaults reales.
+   * Evita el parpadeo de contenido desactualizado (Flash of Stale Content) o pantallas vacías.
+   */
+  private getInitialContent(): SiteContent {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return { ...defaultSiteContent, ...parsed };
+        }
+      } catch (e) {
+        console.warn('[SiteContentService] Error leyendo caché local:', e);
+      }
+    }
+    return defaultSiteContent;
+  }
+
+  /**
+   * Revalidación en segundo plano (Stale-While-Revalidate):
+   * Solicita el contenido fresco al backend sin bloquear la interfaz de usuario.
+   */
   loadContent(): Observable<SiteContent> {
-    this.loading.set(true);
     return this.http.get<SiteContent>(`${environment.apiUrl}/site-content`).pipe(
       tap(data => {
         if (data) {
-          this.content.set({ ...defaultSiteContent, ...data });
+          const merged = { ...defaultSiteContent, ...data };
+          this.content.set(merged);
+          this.saveToCache(merged);
         }
         this.loading.set(false);
       }),
       catchError(err => {
-        console.warn('Could not load site content from API, using default content', err);
+        // En cold-start o fallo de red, se mantiene el contenido en caché silenciosamente sin alertar invasivamente
+        console.warn('[SiteContentService] Servidor en espera o demorado (cold start). Usando contenido local persistido.', err);
         this.loading.set(false);
         return of(this.content());
       })
@@ -77,7 +104,9 @@ export class SiteContentService {
     const updated = { ...this.content(), ...dto };
     return this.http.put<SiteContent>(`${environment.apiUrl}/site-content`, updated).pipe(
       tap(saved => {
-        this.content.set({ ...defaultSiteContent, ...saved });
+        const merged = { ...defaultSiteContent, ...saved };
+        this.content.set(merged);
+        this.saveToCache(merged);
       })
     );
   }
@@ -99,6 +128,16 @@ export class SiteContentService {
     );
   }
 
+  private saveToCache(content: SiteContent): void {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(content));
+      } catch (e) {
+        console.warn('[SiteContentService] Error guardando en localStorage:', e);
+      }
+    }
+  }
+
   getImageUrl(url?: string): string {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -107,3 +146,4 @@ export class SiteContentService {
     return `${environment.uploadsUrl}${url.startsWith('/') ? '' : '/'}${url}`;
   }
 }
+

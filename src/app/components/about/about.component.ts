@@ -65,14 +65,14 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
               [revealDelay]="140"
               class="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-neutral-900 leading-tight"
             >
-              {{ siteContentService.content().aboutTitle || 'JulietaMarateo' }}
+              {{ siteContentService.content().aboutTitle || 'Julieta Marateo' }}
             </h2>
             <p 
               appScrollReveal="fade-up"
               [revealDelay]="200"
               class="text-sm sm:text-base font-medium text-neutral-500 mt-1 mb-6"
             >
-              {{ siteContentService.content().aboutSubtitle || 'Travel & Documentary Photographer' }}
+              {{ siteContentService.content().aboutSubtitle || 'Técnica en fotografía' }}
             </p>
 
             <!-- Bio Text -->
@@ -93,7 +93,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
               class="mt-8 pl-4 border-l-2 border-neutral-900 py-1"
             >
               <p class="text-sm sm:text-base italic font-serif text-neutral-800 leading-relaxed">
-                "{{ siteContentService.content().aboutQuote || 'Photography is not about documenting places; it is about holding on to the ephemeral light and silent narratives that define who we are.' }}"
+                "{{ siteContentService.content().aboutQuote || 'Todavía no estoy inspirada' }}"
               </p>
             </div>
 
