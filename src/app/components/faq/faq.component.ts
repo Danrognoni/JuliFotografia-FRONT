@@ -217,8 +217,8 @@ export interface FaqItem {
 export class FaqComponent {
   readonly siteContentService = inject(SiteContentService);
 
-  // Accordion state: by default the first question is open for discovery
-  readonly openIndex = signal<number | null>(0);
+  // Accordion state: by default all questions start collapsed (null)
+  readonly openIndex = signal<number | null>(null);
 
   readonly faqItems: FaqItem[] = [
     {

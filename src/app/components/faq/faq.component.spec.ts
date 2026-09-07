@@ -36,8 +36,8 @@ describe('FaqComponent', () => {
   });
 
   it('should toggle accordion index properly', () => {
-    // Initially index 0 is open
-    expect(component.openIndex()).toBe(0);
+    // Initially all questions are closed
+    expect(component.openIndex()).toBeNull();
 
     // Clicking index 1 should open index 1
     component.toggle(1);
