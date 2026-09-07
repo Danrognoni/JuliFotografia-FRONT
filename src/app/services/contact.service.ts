@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ContactMessage } from '../models/contact.model';
@@ -10,10 +10,11 @@ import { ContactMessage } from '../models/contact.model';
 export class ContactService {
   private readonly http = inject(HttpClient);
 
-  sendMessage(message: ContactMessage): Observable<{ success: boolean; message: string; id: number }> {
+  sendMessage(message: ContactMessage): Observable<HttpResponse<{ success: boolean; message: string; id: number }>> {
     return this.http.post<{ success: boolean; message: string; id: number }>(
       `${environment.apiUrl}/contact`,
-      message
+      message,
+      { observe: 'response' }
     );
   }
 

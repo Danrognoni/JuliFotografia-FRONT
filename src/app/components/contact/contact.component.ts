@@ -137,8 +137,9 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
                     [(ngModel)]="formData.name" 
                     name="name" 
                     required 
+                    [disabled]="submitting()"
                     placeholder="Tu nombre"
-                    class="w-full px-4 py-3 min-h-[48px] rounded-lg border border-neutral-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition touch-target-48"
+                    class="w-full px-4 py-3 min-h-[48px] rounded-lg border border-neutral-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition touch-target-48 disabled:opacity-60"
                   />
                 </div>
 
@@ -149,8 +150,9 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
                     [(ngModel)]="formData.email" 
                     name="email" 
                     required 
+                    [disabled]="submitting()"
                     placeholder="tu@email.com"
-                    class="w-full px-4 py-3 min-h-[48px] rounded-lg border border-neutral-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition touch-target-48"
+                    class="w-full px-4 py-3 min-h-[48px] rounded-lg border border-neutral-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition touch-target-48 disabled:opacity-60"
                   />
                 </div>
               </div>
@@ -161,8 +163,9 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
                   type="text" 
                   [(ngModel)]="formData.subject" 
                   name="subject" 
+                  [disabled]="submitting()"
                   placeholder="Ej. Comisión editorial, Copia Fine Art o Expedición"
-                  class="w-full px-4 py-3 min-h-[48px] rounded-lg border border-neutral-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition touch-target-48"
+                  class="w-full px-4 py-3 min-h-[48px] rounded-lg border border-neutral-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition touch-target-48 disabled:opacity-60"
                 />
               </div>
 
@@ -173,10 +176,21 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
                   name="message" 
                   required 
                   rows="5" 
+                  [disabled]="submitting()"
                   placeholder="Cuéntanos sobre tu idea, locación, fecha estimada o requerimiento..."
-                  class="w-full px-4 py-3 rounded-lg border border-neutral-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
+                  class="w-full px-4 py-3 rounded-lg border border-neutral-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition disabled:opacity-60"
                 ></textarea>
               </div>
+
+              <!-- Error Alert Banner -->
+              @if (errorMessage()) {
+                <div class="p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm flex items-start gap-3 shadow-sm" role="alert">
+                  <svg class="w-5 h-5 text-red-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span class="font-medium leading-relaxed">{{ errorMessage() }}</span>
+                </div>
+              }
 
               <button 
                 type="submit" 
@@ -188,7 +202,7 @@ import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive'
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <span>Enviando mensaje...</span>
+                  <span>Enviando...</span>
                 } @else {
                   <span>Enviar Mensaje</span>
                   <div class="w-2.5 h-2.5 rounded-full bg-white ml-1"></div>
@@ -211,6 +225,7 @@ export class ContactComponent {
   private readonly toastService = inject(ToastService);
 
   readonly submitting = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
   formData: ContactMessage = {
     name: '',
@@ -220,26 +235,39 @@ export class ContactComponent {
   };
 
   onSubmit() {
+    if (this.submitting()) return;
+
     if (!this.formData.name || !this.formData.email || !this.formData.message) {
       this.toastService.error('Por favor completa todos los campos requeridos');
       return;
     }
 
+    this.errorMessage.set(null);
     this.submitting.set(true);
+
     this.contactService.sendMessage(this.formData).subscribe({
-      next: () => {
+      next: (response) => {
         this.submitting.set(false);
-        this.toastService.success('¡Mensaje enviado con éxito! Nos pondremos en contacto pronto.');
-        this.formData = {
-          name: '',
-          email: '',
-          subject: '',
-          message: ''
-        };
+        if ((response.status === 200 || response.status === 201) && response.body?.success) {
+          this.toastService.success('¡Mensaje enviado con éxito! Nos pondremos en contacto pronto.');
+          this.errorMessage.set(null);
+          this.formData = {
+            name: '',
+            email: '',
+            subject: '',
+            message: ''
+          };
+        } else {
+          const errorMsg = 'Hubo un error al enviar el mensaje. Por favor, intenta de nuevo o comunícate por redes/WhatsApp.';
+          this.errorMessage.set(errorMsg);
+          this.toastService.error(errorMsg);
+        }
       },
-      error: () => {
+      error: (err) => {
         this.submitting.set(false);
-        this.toastService.error('Error al enviar el mensaje. Intenta nuevamente.');
+        const errorMsg = 'Hubo un error al enviar el mensaje. Por favor, intenta de nuevo o comunícate por redes/WhatsApp.';
+        this.errorMessage.set(errorMsg);
+        this.toastService.error(errorMsg);
       }
     });
   }
