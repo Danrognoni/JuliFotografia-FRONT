@@ -39,4 +39,7 @@ export interface SiteContent {
 
   footerText: string;
   copyrightText: string;
+  portfolioTitle?: string;
+  portfolioBgColor?: string;
+  globalFont?: string;
 }

@@ -32,6 +32,7 @@ export interface Album {
   height?: number;
   rotation?: number;
   zIndex?: number;
+  backgroundColor?: string;
   photos?: AlbumPhoto[];
   photoUrls?: string[];
   count?: number;

@@ -14,6 +14,7 @@ import { LoginModalComponent } from '../../components/login-modal/login-modal.co
 import { EditTextModalComponent, EditFieldConfig } from '../../components/edit-text-modal/edit-text-modal.component';
 import { PhotoModalComponent } from '../../components/photo-modal/photo-modal.component';
 import { InboxModalComponent } from '../../components/inbox-modal/inbox-modal.component';
+import { TypographyModalComponent } from '../../components/typography-modal/typography-modal.component';
 import { SiteContentService } from '../../services/site-content.service';
 import { Photo } from '../../models/photo.model';
 
@@ -35,7 +36,8 @@ import { Photo } from '../../models/photo.model';
     LoginModalComponent,
     EditTextModalComponent,
     PhotoModalComponent,
-    InboxModalComponent
+    InboxModalComponent,
+    TypographyModalComponent
   ],
   template: `
     <div class="relative min-h-screen bg-[#faf9f6] text-neutral-900 overflow-x-hidden">
@@ -43,6 +45,7 @@ import { Photo } from '../../models/photo.model';
       <app-admin-bar 
         (openInbox)="showInboxModal.set(true)"
         (openUploadPhoto)="openNewPhotoModal()"
+        (openTypographyModal)="showTypographyModal.set(true)"
       />
 
       <!-- Floating Header Navigation -->
@@ -61,6 +64,7 @@ import { Photo } from '../../models/photo.model';
         <!-- 2. Portfolio Section: Asymmetric Mosaic of Albums (Screenshot 1) -->
         <app-portfolio 
           (openUpload)="openNewPhotoModal()"
+          (editPortfolio)="openEditPortfolioModal()"
         />
 
         <!-- 3. Beyond the Frame / Story Card (Screenshot 3) -->
@@ -115,6 +119,10 @@ import { Photo } from '../../models/photo.model';
       @if (showInboxModal()) {
         <app-inbox-modal (close)="showInboxModal.set(false)" />
       }
+
+      @if (showTypographyModal()) {
+        <app-typography-modal (close)="showTypographyModal.set(false)" />
+      }
     </div>
   `
 })
@@ -125,6 +133,7 @@ export class HomeComponent implements OnInit {
   readonly showEditTextModal = signal(false);
   readonly showPhotoModal = signal(false);
   readonly showInboxModal = signal(false);
+  readonly showTypographyModal = signal(false);
 
   selectedPhotoToEdit: Photo | null = null;
   activeEditTitle = '';
@@ -132,6 +141,15 @@ export class HomeComponent implements OnInit {
 
   ngOnInit() {
     this.siteContentService.loadContent().subscribe();
+  }
+
+  openEditPortfolioModal() {
+    this.activeEditTitle = 'Editar Sección Portfolio & Expediciones';
+    this.activeEditFields = [
+      { key: 'portfolioTitle', label: 'Título Principal de Sección', type: 'text', description: 'Ej: Portfolio & Expediciones' },
+      { key: 'portfolioBgColor', label: 'Color de Fondo del Lienzo (HEX)', type: 'text', description: 'Ej: #edf3f8 o #faf9f6' }
+    ];
+    this.showEditTextModal.set(true);
   }
 
   openNewPhotoModal() {

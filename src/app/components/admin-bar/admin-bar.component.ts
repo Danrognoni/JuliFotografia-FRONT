@@ -32,6 +32,17 @@ import { ToastService } from '../../services/toast.service';
           <!-- Actions -->
           <div class="flex items-center gap-2">
             <button 
+              (click)="openTypographyModal.emit()"
+              class="px-2.5 py-1 bg-amber-400 hover:bg-amber-300 text-black font-bold rounded-md transition flex items-center gap-1.5 shadow-sm"
+              title="Abrir catálogo visual de tipografías globales"
+            >
+              <svg class="w-3.5 h-3.5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16m-7 6h7" />
+              </svg>
+              <span>Tipografías</span>
+            </button>
+
+            <button 
               (click)="openInbox.emit()"
               class="px-2.5 py-1 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded-md transition flex items-center gap-1.5 font-medium"
             >
@@ -65,6 +76,7 @@ import { ToastService } from '../../services/toast.service';
   `
 })
 export class AdminBarComponent {
+  @Output() openTypographyModal = new EventEmitter<void>();
   @Output() openInbox = new EventEmitter<void>();
   @Output() openUploadPhoto = new EventEmitter<void>();
 

@@ -146,6 +146,45 @@ import { compressImage, formatBytes } from '../../utils/image-compression.util';
             </div>
           </div>
 
+          <!-- Color de Fondo Personalizado del Álbum -->
+          <div>
+            <label class="block text-xs font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">
+              Color de Fondo del Álbum
+            </label>
+            <div class="p-3 bg-neutral-50 rounded-xl border border-neutral-200/80 space-y-3">
+              <!-- Swatches de paleta rápida -->
+              <div class="flex items-center gap-2 flex-wrap">
+                @for (c of albumColorPresets; track c) {
+                  <button
+                    type="button"
+                    (click)="backgroundColor = c"
+                    class="w-7 h-7 rounded-lg border-2 transition transform hover:scale-110 shadow-sm"
+                    [ngClass]="backgroundColor === c ? 'border-neutral-900 ring-2 ring-neutral-900/30 scale-105' : 'border-neutral-300'"
+                    [style.backgroundColor]="c"
+                    [title]="c"
+                  ></button>
+                }
+              </div>
+
+              <div class="flex items-center gap-2">
+                <input 
+                  type="color" 
+                  [(ngModel)]="backgroundColor" 
+                  name="bgColorPicker"
+                  class="w-8 h-8 p-0 border border-neutral-300 rounded-lg cursor-pointer bg-transparent"
+                />
+                <input 
+                  type="text" 
+                  [(ngModel)]="backgroundColor" 
+                  name="backgroundColor" 
+                  placeholder="#ffffff"
+                  class="w-28 px-3 py-1.5 text-xs font-mono rounded-lg border border-neutral-300 uppercase focus:outline-none focus:ring-2 focus:ring-black"
+                />
+                <span class="text-[11px] text-neutral-400">Tono del contenedor / tarjeta del álbum</span>
+              </div>
+            </div>
+          </div>
+
           <!-- Actions -->
           <div class="pt-4 border-t border-neutral-100 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
             <button 
@@ -189,8 +228,11 @@ export class AlbumModalComponent implements OnInit {
   subtitle = '';
   description = '';
   coverImageUrl = '';
+  backgroundColor = '#ffffff';
   selectedFile: File | null = null;
   previewUrl: string | null = null;
+
+  readonly albumColorPresets = ['#ffffff', '#faf9f6', '#fbf8ee', '#e9f0f6', '#faeee7', '#edf2ec', '#1e1e1e'];
 
   readonly loading = signal(false);
   readonly compressing = signal(false);
@@ -202,6 +244,7 @@ export class AlbumModalComponent implements OnInit {
       this.subtitle = this.albumToEdit.subtitle || '';
       this.description = this.albumToEdit.description || '';
       this.coverImageUrl = this.albumToEdit.coverImageUrl || this.albumToEdit.coverImage || '';
+      this.backgroundColor = this.albumToEdit.backgroundColor || '#ffffff';
       if (this.coverImageUrl) {
         this.previewUrl = this.albumService.getImageUrl(this.coverImageUrl);
       }
@@ -274,6 +317,7 @@ export class AlbumModalComponent implements OnInit {
         formData.append('name', trimmedTitle);
         if (this.subtitle.trim()) formData.append('subtitle', this.subtitle.trim());
         if (this.description.trim()) formData.append('description', this.description.trim());
+        if (this.backgroundColor.trim()) formData.append('backgroundColor', this.backgroundColor.trim());
         formData.append('file', this.selectedFile);
 
         this.albumService.updateAlbumMultipart(this.albumToEdit.id, formData).subscribe({
@@ -296,7 +340,8 @@ export class AlbumModalComponent implements OnInit {
           subtitle: this.subtitle.trim() || undefined,
           description: this.description.trim() || undefined,
           coverImageUrl: this.coverImageUrl.trim() || undefined,
-          coverImage: this.coverImageUrl.trim() || undefined
+          coverImage: this.coverImageUrl.trim() || undefined,
+          backgroundColor: this.backgroundColor.trim() || undefined
         };
 
         this.albumService.updateAlbum(this.albumToEdit.id, dto).subscribe({
@@ -321,6 +366,7 @@ export class AlbumModalComponent implements OnInit {
         formData.append('name', trimmedTitle);
         if (this.subtitle.trim()) formData.append('subtitle', this.subtitle.trim());
         if (this.description.trim()) formData.append('description', this.description.trim());
+        if (this.backgroundColor.trim()) formData.append('backgroundColor', this.backgroundColor.trim());
         formData.append('file', this.selectedFile);
 
         this.albumService.createAlbumMultipart(formData).subscribe({
@@ -343,7 +389,8 @@ export class AlbumModalComponent implements OnInit {
           subtitle: this.subtitle.trim() || undefined,
           description: this.description.trim() || undefined,
           coverImageUrl: this.coverImageUrl.trim() || undefined,
-          coverImage: this.coverImageUrl.trim() || undefined
+          coverImage: this.coverImageUrl.trim() || undefined,
+          backgroundColor: this.backgroundColor.trim() || undefined
         };
 
         this.albumService.createAlbum(dto).subscribe({

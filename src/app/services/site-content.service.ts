@@ -46,7 +46,10 @@ const defaultSiteContent: SiteContent = {
   whatsappNumber: '+54 2281 311917',
 
   footerText: 'Journeys captured beyond the postcard view. All images shot on location worldwide.',
-  copyrightText: '© 2026 Julieta Marateo. All rights reserved.'
+  copyrightText: '© 2026 Julieta Marateo. All rights reserved.',
+  portfolioTitle: 'PORTFOLIO & EXPEDICIONES',
+  portfolioBgColor: '#edf3f8',
+  globalFont: 'Playfair Display'
 };
 
 @Injectable({
@@ -58,23 +61,44 @@ export class SiteContentService {
   readonly content = signal<SiteContent>(this.getInitialContent());
   readonly loading = signal<boolean>(false);
 
+  constructor() {
+    this.applyGlobalFont(this.content().globalFont);
+  }
+
   /**
    * Carga inicial inmediata: Lee localStorage (Stale) o recurre a los defaults reales.
    * Evita el parpadeo de contenido desactualizado (Flash of Stale Content) o pantallas vacías.
    */
   private getInitialContent(): SiteContent {
+    let result = defaultSiteContent;
     if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
       try {
         const raw = localStorage.getItem(CACHE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
-          return { ...defaultSiteContent, ...parsed };
+          result = { ...defaultSiteContent, ...parsed };
         }
       } catch (e) {
         console.warn('[SiteContentService] Error leyendo caché local:', e);
       }
     }
-    return defaultSiteContent;
+    return result;
+  }
+
+  /**
+   * Aplica dinámicamente la tipografía seleccionada a las variables CSS globales y al body
+   */
+  applyGlobalFont(fontName?: string): void {
+    if (typeof document === 'undefined') return;
+    const font = fontName || this.content().globalFont || 'Playfair Display';
+    const serifFonts = ['Playfair Display', 'Cinzel', 'Cormorant Garamond', 'Lora', 'Bodoni Moda'];
+    const fallback = serifFonts.includes(font) ? 'Georgia, serif' : 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif';
+    const fullFamily = `'${font}', ${fallback}`;
+
+    document.documentElement.style.setProperty('--font-heading', fullFamily);
+    document.documentElement.style.setProperty('--font-primary', fullFamily);
+    document.documentElement.style.setProperty('--font-display', fullFamily);
+    document.documentElement.style.setProperty('--font-editorial', fullFamily);
   }
 
   /**
@@ -88,6 +112,7 @@ export class SiteContentService {
           const merged = { ...defaultSiteContent, ...data };
           this.content.set(merged);
           this.saveToCache(merged);
+          this.applyGlobalFont(merged.globalFont);
         }
         this.loading.set(false);
       }),
@@ -95,6 +120,7 @@ export class SiteContentService {
         // En cold-start o fallo de red, se mantiene el contenido en caché silenciosamente sin alertar invasivamente
         console.warn('[SiteContentService] Servidor en espera o demorado (cold start). Usando contenido local persistido.', err);
         this.loading.set(false);
+        this.applyGlobalFont(this.content().globalFont);
         return of(this.content());
       })
     );
@@ -107,6 +133,7 @@ export class SiteContentService {
         const merged = { ...defaultSiteContent, ...saved };
         this.content.set(merged);
         this.saveToCache(merged);
+        this.applyGlobalFont(merged.globalFont);
       })
     );
   }

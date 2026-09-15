@@ -11,6 +11,7 @@ import {
   signal
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CdkDragEnd, CdkDragHandle, DragDropModule } from '@angular/cdk/drag-drop';
 import { AlbumService } from '../../services/album.service';
@@ -30,18 +31,70 @@ import {
 @Component({
   selector: 'app-portfolio',
   standalone: true,
-  imports: [CommonModule, DragDropModule, AlbumModalComponent],
+  imports: [CommonModule, FormsModule, DragDropModule, AlbumModalComponent],
   template: `
-    <section id="portfolio" class="w-full py-16 sm:py-24 md:py-36 bg-[#edf3f8] text-neutral-900 relative overflow-hidden overflow-x-hidden">
+    <section 
+      id="portfolio" 
+      class="w-full py-16 sm:py-24 md:py-36 text-neutral-900 relative overflow-hidden overflow-x-hidden transition-colors duration-500"
+      [style.backgroundColor]="siteContentService.content().portfolioBgColor || '#edf3f8'"
+    >
       <!-- Contenedor al 100% del ancho con padding adaptativo -->
       <div class="w-full px-3 sm:px-6 lg:px-12 max-w-full overflow-x-hidden">
         
         <!-- Header & Admin Toolbar -->
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 sm:mb-12 md:mb-16 max-w-7xl mx-auto">
           <div class="flex flex-wrap items-center justify-start sm:justify-center gap-2.5 text-left sm:text-center">
-            <h1 class="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-neutral-900 uppercase">
-              Portfolio & Expediciones
-            </h1>
+            @if (!isEditingTitle()) {
+              <h1 class="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-neutral-900 uppercase">
+                {{ siteContentService.content().portfolioTitle || 'Portfolio & Expediciones' }}
+              </h1>
+              @if (authService.isAdmin()) {
+                <button 
+                  type="button"
+                  (click)="startEditingTitle()"
+                  class="touch-target-48 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-400 hover:bg-amber-300 text-black text-xs font-bold shadow-sm transition hover:scale-105"
+                  title="Editar título in-situ"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  <span>Editar Título</span>
+                </button>
+              }
+            } @else {
+              <div class="flex items-center gap-2 flex-wrap">
+                <input 
+                  type="text" 
+                  [(ngModel)]="tempPortfolioTitle"
+                  (keydown.enter)="savePortfolioTitle()"
+                  (keydown.escape)="cancelEditingTitle()"
+                  class="text-xl sm:text-3xl font-bold uppercase tracking-tight text-neutral-900 bg-white border-2 border-amber-400 rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-sm"
+                  placeholder="Portfolio & Expediciones"
+                />
+                <button 
+                  type="button" 
+                  (click)="savePortfolioTitle()"
+                  [disabled]="savingTitle()"
+                  class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow transition"
+                >
+                  @if (savingTitle()) {
+                    <span class="animate-spin text-xs">●</span>
+                  } @else {
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  }
+                  <span>Guardar</span>
+                </button>
+                <button 
+                  type="button" 
+                  (click)="cancelEditingTitle()"
+                  class="px-3 py-2 bg-neutral-200 hover:bg-neutral-300 text-neutral-800 rounded-xl text-xs font-semibold transition"
+                >
+                  Cancelar
+                </button>
+              </div>
+            }
             @if (isEditLayoutMode()) {
               <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
                 <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
@@ -116,6 +169,67 @@ import {
                 }
               </button>
 
+              <!-- Selector Color de Fondo de Sección / Lienzo -->
+              <div class="relative">
+                <button 
+                  type="button"
+                  (click)="showSectionBgPicker.set(!showSectionBgPicker())"
+                  class="touch-target-48 inline-flex items-center justify-center gap-2 px-3.5 py-3 min-h-[48px] bg-white hover:bg-neutral-50 text-neutral-900 text-xs font-bold rounded-xl border border-neutral-300 shadow-sm transition hover:shadow"
+                  title="Cambiar color de fondo del lienzo / sección"
+                >
+                  <div 
+                    class="w-4 h-4 rounded-full border border-black/20 shadow-inner" 
+                    [style.backgroundColor]="siteContentService.content().portfolioBgColor || '#edf3f8'"
+                  ></div>
+                  <span class="hidden sm:inline">Fondo Lienzo</span>
+                </button>
+
+                @if (showSectionBgPicker()) {
+                  <div class="absolute top-full right-0 mt-2 z-50 p-4 bg-white rounded-2xl shadow-2xl border border-neutral-200 w-72 animate-fadeIn" (click)="$event.stopPropagation()">
+                    <div class="flex items-center justify-between mb-3 pb-2 border-b border-neutral-100">
+                      <span class="text-xs font-bold uppercase tracking-wider text-neutral-700">Fondo de Lienzo</span>
+                      <button (click)="showSectionBgPicker.set(false)" class="text-neutral-400 hover:text-black">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    <!-- Paleta predefinida -->
+                    <div class="grid grid-cols-6 gap-2 mb-3">
+                      @for (color of sectionColorPresets; track color) {
+                        <button 
+                          type="button" 
+                          (click)="onSelectSectionBg(color)"
+                          class="w-8 h-8 rounded-lg border-2 transition transform hover:scale-110 shadow-sm"
+                          [ngClass]="(siteContentService.content().portfolioBgColor || '#edf3f8') === color ? 'border-neutral-900 scale-105 ring-2 ring-neutral-900/30' : 'border-neutral-200'"
+                          [style.backgroundColor]="color"
+                          [title]="color"
+                        ></button>
+                      }
+                    </div>
+
+                    <!-- Input nativo y HEX -->
+                    <div class="flex items-center gap-2">
+                      <input 
+                        type="color" 
+                        [value]="siteContentService.content().portfolioBgColor || '#edf3f8'"
+                        (input)="onLiveSectionBg($event)"
+                        (change)="onSaveSectionBg($event)"
+                        class="w-9 h-9 p-0 border border-neutral-300 rounded-lg cursor-pointer bg-transparent"
+                      />
+                      <input 
+                        type="text" 
+                        [value]="siteContentService.content().portfolioBgColor || '#edf3f8'"
+                        (change)="onSaveSectionBgText($event)"
+                        placeholder="#edf3f8"
+                        class="flex-1 px-3 py-1.5 text-xs font-mono rounded-lg border border-neutral-300 uppercase focus:outline-none focus:ring-2 focus:ring-black"
+                      />
+                    </div>
+                  </div>
+                }
+              </div>
+
               <!-- Botón + Nuevo Álbum (Modo Vista) -->
               @if (!isEditLayoutMode()) {
                 <button 
@@ -152,7 +266,8 @@ import {
                 @for (album of albumService.albums(); track album.id; let i = $index) {
                   <article 
                     (click)="onAlbumClick(album, $event)"
-                    class="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-black/5 cursor-pointer active:scale-[0.99] flex flex-col"
+                    class="group relative rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-black/5 cursor-pointer active:scale-[0.99] flex flex-col"
+                    [style.backgroundColor]="album.backgroundColor || '#ffffff'"
                   >
                     <!-- Portada con relación de aspecto 4:3 estricta y skeleton shimmer (CLS = 0) -->
                     <div class="relative w-full aspect-[4/3] bg-neutral-100 overflow-hidden">
@@ -337,6 +452,7 @@ import {
                 <div 
                   [attr.cdkDragHandle]="isEditLayoutMode() ? '' : null"
                   class="relative w-full h-full bg-neutral-100 transition-all duration-200"
+                  [style.backgroundColor]="album.backgroundColor || null"
                   [ngClass]="{
                     'overflow-hidden ring-2 ring-amber-500 ring-offset-2 ring-offset-[#edf3f8] shadow-2xl rounded-sm cursor-grab active:cursor-grabbing touch-none': isEditLayoutMode(),
                     'overflow-hidden shadow-sm hover:shadow-lg': !isEditLayoutMode(),
@@ -448,7 +564,7 @@ import {
                     title="Estirar / comprimir ancho (derecho)"
                   ></div>
 
-                  <!-- 4. FLOATING HUD BADGE (DIMENSIONS & ROTATION ANGLE) -->
+                  <!-- 4. FLOATING HUD BADGE (DIMENSIONS & ROTATION ANGLE & COLOR) -->
                   <div class="absolute -top-14 left-1/2 -translate-x-1/2 bg-neutral-900/95 text-white px-2.5 py-1 rounded-full text-[10px] font-mono tracking-wider shadow-xl z-50 whitespace-nowrap pointer-events-auto flex items-center gap-2 border border-white/10">
                     <span>{{ Math.round(album.width || 30) }}% w</span>
                     <span class="text-amber-400 font-bold">{{ Math.round(album.rotation || 0) }}°</span>
@@ -462,6 +578,52 @@ import {
                         0°
                       </button>
                     }
+
+                    <!-- Selector de color del álbum en Gizmo -->
+                    <div class="relative flex items-center border-l border-white/20 pl-2">
+                      <button
+                        type="button"
+                        (click)="toggleAlbumColorPicker(album.id, $event)"
+                        class="w-4 h-4 rounded-full border border-white/60 shadow-inner transition hover:scale-125"
+                        [style.backgroundColor]="album.backgroundColor || '#ffffff'"
+                        title="Elegir color de fondo para este álbum"
+                      ></button>
+                      @if (activeAlbumColorPicker() === album.id) {
+                        <div 
+                          class="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-[99] p-3 bg-neutral-900/95 backdrop-blur-md rounded-xl border border-neutral-700 shadow-2xl flex flex-col gap-2 pointer-events-auto"
+                          (click)="$event.stopPropagation()"
+                        >
+                          <span class="text-[9px] font-sans font-bold uppercase tracking-wider text-neutral-400">Color del Álbum</span>
+                          <div class="flex items-center gap-1.5">
+                            @for (c of albumPresets; track c) {
+                              <button
+                                type="button"
+                                (click)="setAlbumBg(album, c)"
+                                class="w-5 h-5 rounded-md border border-white/30 transition hover:scale-125 shadow-sm"
+                                [style.backgroundColor]="c"
+                                [title]="c"
+                              ></button>
+                            }
+                          </div>
+                          <div class="flex items-center gap-1.5 pt-1 border-t border-neutral-700">
+                            <input
+                              type="color"
+                              [value]="album.backgroundColor || '#ffffff'"
+                              (input)="onLiveAlbumBg(album, $event)"
+                              (change)="onSaveAlbumBg(album, $event)"
+                              class="w-6 h-6 p-0 border-0 rounded cursor-pointer bg-transparent"
+                            />
+                            <input
+                              type="text"
+                              [value]="album.backgroundColor || '#ffffff'"
+                              (change)="onSaveAlbumBgText(album, $event)"
+                              placeholder="#ffffff"
+                              class="w-20 px-1.5 py-0.5 text-[10px] font-mono bg-neutral-800 text-white rounded border border-neutral-600 uppercase focus:outline-none focus:border-amber-400"
+                            />
+                          </div>
+                        </div>
+                      }
+                    </div>
                   </div>
                 }
               </div>
@@ -694,6 +856,7 @@ import {
 })
 export class PortfolioComponent implements OnInit {
   @Output() openUpload = new EventEmitter<void>();
+  @Output() editPortfolio = new EventEmitter<void>();
   @ViewChild('canvasContainer') canvasContainer!: ElementRef<HTMLDivElement>;
 
   readonly albumService = inject(AlbumService);
@@ -703,6 +866,120 @@ export class PortfolioComponent implements OnInit {
   private readonly router = inject(Router);
 
   readonly Math = Math;
+
+  // Edición In-Situ del Título
+  readonly isEditingTitle = signal<boolean>(false);
+  tempPortfolioTitle = '';
+  readonly savingTitle = signal<boolean>(false);
+
+  startEditingTitle() {
+    this.tempPortfolioTitle = this.siteContentService.content().portfolioTitle || 'Portfolio & Expediciones';
+    this.isEditingTitle.set(true);
+  }
+
+  cancelEditingTitle() {
+    this.isEditingTitle.set(false);
+  }
+
+  savePortfolioTitle() {
+    const trimmed = this.tempPortfolioTitle.trim();
+    if (!trimmed) return;
+    this.savingTitle.set(true);
+    this.siteContentService.updateContent({ portfolioTitle: trimmed }).subscribe({
+      next: () => {
+        this.savingTitle.set(false);
+        this.isEditingTitle.set(false);
+        this.toastService.success('Título del portfolio actualizado');
+      },
+      error: (err) => {
+        this.savingTitle.set(false);
+        console.error(err);
+        this.toastService.error('Error al guardar el título del portfolio');
+      }
+    });
+  }
+
+  // Color de Fondo de Sección / Lienzo
+  readonly showSectionBgPicker = signal<boolean>(false);
+  readonly sectionColorPresets = ['#edf3f8', '#faf9f6', '#f5eedc', '#f4f4f5', '#e8ece6', '#f0e8e2', '#18181b', '#ffffff'];
+
+  onSelectSectionBg(color: string) {
+    this.siteContentService.updateContent({ portfolioBgColor: color }).subscribe({
+      next: () => {
+        this.toastService.success(`Color de fondo del lienzo cambiado a ${color}`);
+      }
+    });
+  }
+
+  onLiveSectionBg(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input && input.value) {
+      this.siteContentService.content.update(curr => ({ ...curr, portfolioBgColor: input.value }));
+    }
+  }
+
+  onSaveSectionBg(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input && input.value) {
+      this.onSelectSectionBg(input.value);
+    }
+  }
+
+  onSaveSectionBgText(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input && input.value.trim()) {
+      let val = input.value.trim();
+      if (!val.startsWith('#') && (val.length === 3 || val.length === 6)) val = '#' + val;
+      this.onSelectSectionBg(val);
+    }
+  }
+
+  // Color de Fondo por Álbum
+  readonly activeAlbumColorPicker = signal<string | null>(null);
+  readonly albumPresets = ['#ffffff', '#faf9f6', '#fbf8ee', '#e9f0f6', '#faeee7', '#edf2ec', '#1e1e1e'];
+
+  toggleAlbumColorPicker(albumId: string, event: Event) {
+    event.stopPropagation();
+    this.activeAlbumColorPicker.update(curr => curr === albumId ? null : albumId);
+  }
+
+  setAlbumBg(album: Album, color: string) {
+    album.backgroundColor = color;
+    this.pendingChanges.set(true);
+    this.activeAlbumColorPicker.set(null);
+    this.albumService.updateAlbum(album.id, { backgroundColor: color }).subscribe({
+      next: () => {
+        this.toastService.success(`Color de fondo de "${album.title || album.name}" actualizado`);
+      },
+      error: (err) => {
+        console.warn('Error al guardar color de fondo del álbum:', err);
+      }
+    });
+  }
+
+  onLiveAlbumBg(album: Album, event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input && input.value) {
+      album.backgroundColor = input.value;
+      this.pendingChanges.set(true);
+    }
+  }
+
+  onSaveAlbumBg(album: Album, event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input && input.value) {
+      this.setAlbumBg(album, input.value);
+    }
+  }
+
+  onSaveAlbumBgText(album: Album, event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input && input.value.trim()) {
+      let val = input.value.trim();
+      if (!val.startsWith('#') && (val.length === 3 || val.length === 6)) val = '#' + val;
+      this.setAlbumBg(album, val);
+    }
+  }
 
   // Estados del Modo Edición de Lienzo
   readonly isEditLayoutMode = signal<boolean>(false);
