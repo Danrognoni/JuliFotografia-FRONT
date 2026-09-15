@@ -27,6 +27,7 @@ import {
   TransformHandle,
   TransformRect
 } from '../../utils/canvas-transform.util';
+import { getContrastTheme } from '../../utils/color-contrast.util';
 
 @Component({
   selector: 'app-portfolio',
@@ -35,8 +36,9 @@ import {
   template: `
     <section 
       id="portfolio" 
-      class="w-full py-16 sm:py-24 md:py-36 text-neutral-900 relative overflow-hidden overflow-x-hidden transition-colors duration-500"
+      class="w-full py-16 sm:py-24 md:py-36 relative overflow-hidden overflow-x-hidden transition-colors duration-500"
       [style.backgroundColor]="siteContentService.content().portfolioBgColor || '#edf3f8'"
+      [style.color]="portfolioTheme().textPrimary"
     >
       <!-- Contenedor al 100% del ancho con padding adaptativo -->
       <div class="w-full px-3 sm:px-6 lg:px-12 max-w-full overflow-x-hidden">
@@ -45,7 +47,10 @@ import {
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 sm:mb-12 md:mb-16 max-w-7xl mx-auto">
           <div class="flex flex-wrap items-center justify-start sm:justify-center gap-2.5 text-left sm:text-center">
             @if (!isEditingTitle()) {
-              <h1 class="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-neutral-900 uppercase">
+              <h1 
+                class="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight uppercase transition-colors"
+                [style.color]="portfolioTheme().textPrimary"
+              >
                 {{ siteContentService.content().portfolioTitle || 'Portfolio & Expediciones' }}
               </h1>
               @if (authService.isAdmin()) {
@@ -310,11 +315,17 @@ import {
                     <div class="p-4 flex items-center justify-between gap-2">
                       <div class="min-w-0 flex-1">
                         @if (album.subtitle) {
-                          <p class="text-[10px] font-semibold uppercase tracking-wider text-neutral-400 truncate mb-0.5">
+                          <p 
+                            class="text-[10px] font-semibold uppercase tracking-wider truncate mb-0.5"
+                            [style.color]="getAlbumTheme(album.backgroundColor).textMuted"
+                          >
                             {{ album.subtitle }}
                           </p>
                         }
-                        <h3 class="text-sm font-bold text-neutral-900 truncate">
+                        <h3 
+                          class="text-sm font-bold truncate"
+                          [style.color]="getAlbumTheme(album.backgroundColor).textPrimary"
+                        >
                           {{ album.title || album.name }}
                         </h3>
                       </div>
@@ -325,7 +336,8 @@ import {
                           <button 
                             type="button"
                             (click)="openEditAlbumModal(album, $event)"
-                            class="touch-target-48 text-neutral-600 hover:text-black p-2.5 rounded-full hover:bg-neutral-100 transition"
+                            class="touch-target-48 p-2.5 rounded-full hover:bg-black/10 transition"
+                            [style.color]="getAlbumTheme(album.backgroundColor).textSecondary"
                             title="Editar álbum"
                             aria-label="Editar álbum"
                           >
@@ -346,7 +358,10 @@ import {
                           </button>
                         </div>
                       } @else {
-                        <span class="touch-target-48 text-neutral-400 group-hover:text-black group-hover:translate-x-0.5 transition shrink-0">
+                        <span 
+                          class="touch-target-48 group-hover:translate-x-0.5 transition shrink-0"
+                          [style.color]="getAlbumTheme(album.backgroundColor).textMuted"
+                        >
                           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                           </svg>
@@ -902,6 +917,15 @@ export class PortfolioComponent implements OnInit {
   // Color de Fondo de Sección / Lienzo
   readonly showSectionBgPicker = signal<boolean>(false);
   readonly sectionColorPresets = ['#edf3f8', '#faf9f6', '#f5eedc', '#f4f4f5', '#e8ece6', '#f0e8e2', '#18181b', '#ffffff'];
+
+  readonly portfolioTheme = computed(() => {
+    const bg = this.siteContentService.content().portfolioBgColor || '#edf3f8';
+    return getContrastTheme(bg);
+  });
+
+  getAlbumTheme(bgColor?: string) {
+    return getContrastTheme(bgColor || '#ffffff');
+  }
 
   onSelectSectionBg(color: string) {
     this.siteContentService.updateContent({ portfolioBgColor: color }).subscribe({

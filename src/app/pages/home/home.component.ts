@@ -16,6 +16,7 @@ import { PhotoModalComponent } from '../../components/photo-modal/photo-modal.co
 import { InboxModalComponent } from '../../components/inbox-modal/inbox-modal.component';
 import { TypographyModalComponent } from '../../components/typography-modal/typography-modal.component';
 import { SiteContentService } from '../../services/site-content.service';
+import { AuthService } from '../../services/auth.service';
 import { Photo } from '../../models/photo.model';
 
 @Component({
@@ -73,18 +74,24 @@ import { Photo } from '../../models/photo.model';
         />
 
         <!-- 4. About Me / The Story -->
-        <app-about 
-          (editAbout)="openEditAboutModal()"
-        />
+        @if (siteContentService.content().isSobreMiVisible !== false || authService.isAdmin()) {
+          <app-about 
+            (editAbout)="openEditAboutModal()"
+          />
+        }
 
         <!-- 5. FAQ / Preguntas Frecuentes -->
-        <app-faq />
+        @if (siteContentService.content().isFaqVisible !== false || authService.isAdmin()) {
+          <app-faq />
+        }
 
         <!-- 6. Contact Form -->
-        <app-contact 
-          (editContact)="openEditContactModal()"
-          (openInbox)="showInboxModal.set(true)"
-        />
+        @if (siteContentService.content().isContactoVisible !== false || authService.isAdmin()) {
+          <app-contact 
+            (editContact)="openEditContactModal()"
+            (openInbox)="showInboxModal.set(true)"
+          />
+        }
       </main>
 
       <!-- Footer -->
@@ -127,7 +134,8 @@ import { Photo } from '../../models/photo.model';
   `
 })
 export class HomeComponent implements OnInit {
-  private readonly siteContentService = inject(SiteContentService);
+  readonly siteContentService = inject(SiteContentService);
+  readonly authService = inject(AuthService);
 
   readonly showLoginModal = signal(false);
   readonly showEditTextModal = signal(false);
@@ -217,7 +225,8 @@ export class HomeComponent implements OnInit {
       { key: 'aboutSubtitle', label: 'Especialidad / Título Profesional', type: 'text' },
       { key: 'aboutBio', label: 'Biografía Detallada', type: 'textarea' },
       { key: 'aboutQuote', label: 'Cita / Declaración de Artista', type: 'textarea' },
-      { key: 'aboutImageUrl', label: 'Foto de Perfil', type: 'image' }
+      { key: 'aboutImageUrl', label: 'Foto de Perfil', type: 'image' },
+      { key: 'sobreMiBgColor', label: 'Color de Fondo de Sección (HEX)', type: 'text', description: 'Ej: #faf9f6 o #18181b' }
     ];
     this.showEditTextModal.set(true);
   }
@@ -231,7 +240,8 @@ export class HomeComponent implements OnInit {
       { key: 'contactPhone', label: 'Teléfono / WhatsApp', type: 'text' },
       { key: 'contactLocation', label: 'Ubicación / Ciudades Base', type: 'text' },
       { key: 'instagramHandle', label: 'Usuario Instagram', type: 'text' },
-      { key: 'whatsappNumber', label: 'Número de WhatsApp (con código de país)', type: 'text' }
+      { key: 'whatsappNumber', label: 'Número de WhatsApp (con código de país)', type: 'text' },
+      { key: 'contactoBgColor', label: 'Color de Fondo de Sección (HEX)', type: 'text', description: 'Ej: #ffffff o #18181b' }
     ];
     this.showEditTextModal.set(true);
   }

@@ -1,7 +1,10 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SiteContentService } from '../../services/site-content.service';
+import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
 import { ScrollRevealDirective } from '../../directives/scroll-reveal.directive';
+import { getContrastTheme } from '../../utils/color-contrast.util';
 
 export interface FaqItem {
   id: string;
@@ -19,31 +22,137 @@ export interface FaqItem {
   standalone: true,
   imports: [CommonModule, ScrollRevealDirective],
   template: `
-    <section id="faq" class="py-20 sm:py-28 md:py-36 bg-[#faf9f6] text-neutral-900 border-t border-neutral-200/60 relative overflow-hidden">
+    <section 
+      id="faq" 
+      class="py-20 sm:py-28 md:py-36 border-t relative overflow-hidden transition-colors duration-500"
+      [style.backgroundColor]="siteContentService.content().faqBgColor || '#faf9f6'"
+      [style.borderColor]="theme().borderColor"
+    >
+      <!-- Admin Draft Notification Banner -->
+      @if (authService.isAdmin() && siteContentService.content().isFaqVisible === false) {
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 relative z-20">
+          <div class="p-3.5 sm:p-4 rounded-2xl bg-amber-500/15 border border-amber-500/40 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-3 text-amber-200">
+            <div class="flex items-center gap-2.5">
+              <svg class="w-5 h-5 text-amber-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+              </svg>
+              <div class="text-xs">
+                <span class="font-bold text-amber-300 uppercase tracking-wider block sm:inline">Borrador / Oculto al público:</span>
+                <span class="text-neutral-300 ml-0 sm:ml-1">Esta sección solo es visible para ti en modo edición.</span>
+              </div>
+            </div>
+            <button 
+              type="button" 
+              (click)="activateSection()"
+              class="px-4 py-1.5 rounded-full bg-amber-400 hover:bg-amber-300 text-black text-xs font-bold shadow-sm transition"
+            >
+              Publicar / Activar Sección
+            </button>
+          </div>
+        </div>
+      }
+
       <!-- Subtle background radial highlight -->
       <div class="absolute inset-0 pointer-events-none opacity-40">
-        <div class="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-gradient-to-b from-amber-100/40 via-transparent to-transparent blur-3xl rounded-full"></div>
+        <div class="absolute top-1/3 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-gradient-to-b from-amber-100/30 via-transparent to-transparent blur-3xl rounded-full"></div>
       </div>
 
       <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
+        <!-- Admin In-Situ Controls -->
+        @if (authService.isAdmin()) {
+          <div class="flex items-center justify-end mb-6">
+            <div class="relative">
+              <button 
+                type="button"
+                (click)="showBgPicker.set(!showBgPicker())"
+                class="touch-target-48 inline-flex items-center justify-center gap-2 px-3.5 py-2.5 min-h-[44px] bg-white hover:bg-neutral-50 text-neutral-900 text-xs font-bold rounded-xl border border-neutral-300 shadow-sm transition hover:shadow"
+                title="Cambiar color de fondo de FAQ"
+              >
+                <div 
+                  class="w-4 h-4 rounded-full border border-black/20 shadow-inner" 
+                  [style.backgroundColor]="siteContentService.content().faqBgColor || '#faf9f6'"
+                ></div>
+                <span>Fondo FAQ</span>
+              </button>
+
+              @if (showBgPicker()) {
+                <div class="fixed inset-0 z-40" (click)="showBgPicker.set(false)"></div>
+                <div class="absolute top-full right-0 mt-2 z-50 p-4 bg-white rounded-2xl shadow-2xl border border-neutral-200 w-72 text-neutral-900 animate-fadeIn" (click)="$event.stopPropagation()">
+                  <div class="flex items-center justify-between mb-3 pb-2 border-b border-neutral-100">
+                    <span class="text-xs font-bold uppercase tracking-wider text-neutral-700">Fondo: FAQ</span>
+                    <button (click)="showBgPicker.set(false)" class="text-neutral-400 hover:text-black">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <!-- Presets -->
+                  <div class="grid grid-cols-6 gap-2 mb-3">
+                    @for (color of colorPresets; track color) {
+                      <button 
+                        type="button" 
+                        (click)="onSelectBg(color)"
+                        class="w-8 h-8 rounded-lg border-2 transition transform hover:scale-110 shadow-sm"
+                        [ngClass]="(siteContentService.content().faqBgColor || '#faf9f6') === color ? 'border-neutral-900 scale-105 ring-2 ring-neutral-900/30' : 'border-neutral-200'"
+                        [style.backgroundColor]="color"
+                        [title]="color"
+                      ></button>
+                    }
+                  </div>
+
+                  <!-- Native color & HEX -->
+                  <div class="flex items-center gap-2">
+                    <input 
+                      type="color" 
+                      [value]="siteContentService.content().faqBgColor || '#faf9f6'"
+                      (input)="onLiveBg($event)"
+                      (change)="onSaveBg($event)"
+                      class="w-9 h-9 p-0 border border-neutral-300 rounded-lg cursor-pointer bg-transparent"
+                    />
+                    <input 
+                      type="text" 
+                      [value]="siteContentService.content().faqBgColor || '#faf9f6'"
+                      (change)="onSaveBgText($event)"
+                      placeholder="#faf9f6"
+                      class="flex-1 px-3 py-1.5 text-xs font-mono rounded-lg border border-neutral-300 uppercase focus:outline-none focus:ring-2 focus:ring-black"
+                    />
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
         <!-- Section Header -->
         <div 
           appScrollReveal="fade-up"
           [revealDelay]="60"
           class="text-center max-w-2xl mx-auto mb-12 sm:mb-16 md:mb-20"
         >
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900/5 border border-neutral-900/10 text-neutral-600 text-[11px] font-semibold uppercase tracking-widest mb-3">
+          <div 
+            class="inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-semibold uppercase tracking-widest mb-3 transition-colors"
+            [style.backgroundColor]="theme().badgeBg"
+            [style.borderColor]="theme().borderColor"
+            [style.color]="theme().textSecondary"
+          >
             <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
             FAQ
           </div>
 
           <!-- Título principal -->
-          <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-neutral-900">
+          <h2 
+            class="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight transition-colors"
+            [style.color]="theme().textPrimary"
+          >
             Preguntas Frecuentes
-          </h1>
+          </h2>
           
-          <p class="mt-4 text-sm sm:text-base text-neutral-600 leading-relaxed">
+          <p 
+            class="mt-4 text-sm sm:text-base leading-relaxed transition-colors"
+            [style.color]="theme().textSecondary"
+          >
             Todo lo que necesitás saber antes de coordinar tu sesión, producción o cobertura fotográfica.
           </p>
         </div>
@@ -56,11 +165,9 @@ export interface FaqItem {
         >
           @for (item of faqItems; track item.id; let idx = $index) {
             <div 
-              class="group bg-white rounded-2xl border transition-all duration-300 overflow-hidden"
-              [ngClass]="{
-                'border-neutral-900/20 shadow-md ring-1 ring-neutral-900/5': openIndex() === idx,
-                'border-neutral-200/90 shadow-sm hover:border-neutral-300 hover:shadow': openIndex() !== idx
-              }"
+              class="group rounded-2xl border transition-all duration-300 overflow-hidden shadow-sm"
+              [style.backgroundColor]="theme().cardBg"
+              [style.borderColor]="openIndex() === idx ? 'rgba(245, 158, 11, 0.4)' : theme().cardBorder"
             >
               <!-- Accordion Header Button -->
               <button 
@@ -68,22 +175,25 @@ export interface FaqItem {
                 (click)="toggle(idx)"
                 [attr.aria-expanded]="openIndex() === idx"
                 [attr.aria-controls]="'faq-answer-' + item.id"
-                class="w-full text-left px-5 sm:px-7 py-5 sm:py-6 flex items-center justify-between gap-4 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50"
+                class="w-full text-left px-5 sm:px-7 py-5 sm:py-6 flex items-center justify-between gap-4 transition-colors focus:outline-none"
               >
                 <div class="flex items-center gap-3.5 sm:gap-5 min-w-0">
                   <span 
                     class="font-mono text-xs sm:text-sm font-bold transition-colors"
-                    [ngClass]="openIndex() === idx ? 'text-amber-600 font-extrabold' : 'text-neutral-400 group-hover:text-neutral-600'"
+                    [style.color]="openIndex() === idx ? '#d97706' : theme().textMuted"
                   >
                     {{ item.number }}
                   </span>
                   <div class="min-w-0">
-                    <span class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-neutral-400 block mb-0.5">
+                    <span 
+                      class="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider block mb-0.5"
+                      [style.color]="theme().textMuted"
+                    >
                       {{ item.category }}
                     </span>
                     <h3 
-                      class="text-base sm:text-lg md:text-xl font-bold tracking-tight text-neutral-900 transition-colors"
-                      [ngClass]="openIndex() === idx ? 'text-black' : 'text-neutral-800 group-hover:text-black'"
+                      class="text-base sm:text-lg md:text-xl font-bold tracking-tight transition-colors"
+                      [style.color]="theme().textPrimary"
                     >
                       {{ item.question }}
                     </h3>
@@ -93,10 +203,10 @@ export interface FaqItem {
                 <!-- Toggle Chevron Icon -->
                 <div 
                   class="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border transition-all duration-300"
-                  [ngClass]="{
-                    'bg-neutral-900 text-white border-neutral-900 rotate-180': openIndex() === idx,
-                    'bg-neutral-50 text-neutral-500 border-neutral-200 group-hover:bg-neutral-100 group-hover:text-neutral-800': openIndex() !== idx
-                  }"
+                  [ngClass]="{ 'rotate-180': openIndex() === idx }"
+                  [style.backgroundColor]="openIndex() === idx ? '#d97706' : theme().badgeBg"
+                  [style.borderColor]="theme().borderColor"
+                  [style.color]="openIndex() === idx ? '#ffffff' : theme().textPrimary"
                 >
                   <svg class="w-4 h-4 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 9l-7 7-7-7" />
@@ -104,31 +214,39 @@ export interface FaqItem {
                 </div>
               </button>
 
-              <!-- Accordion Content Collapse with CSS Grid Transition -->
+              <!-- Accordion Content Collapse -->
               <div 
                 [id]="'faq-answer-' + item.id"
                 class="grid transition-all duration-300 ease-in-out"
                 [ngClass]="openIndex() === idx ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'"
               >
                 <div class="overflow-hidden">
-                  <div class="px-5 sm:px-7 pb-6 sm:pb-8 pt-1 text-neutral-600 text-sm sm:text-base leading-relaxed border-t border-neutral-100">
+                  <div 
+                    class="px-5 sm:px-7 pb-6 sm:pb-8 pt-1 text-sm sm:text-base leading-relaxed border-t"
+                    [style.borderColor]="theme().borderColor"
+                    [style.color]="theme().textSecondary"
+                  >
                     
                     <!-- Q1: Servicios con lista enriquecida -->
                     @if (item.servicesList) {
-                      <p class="mb-5 text-neutral-700 font-medium">
+                      <p class="mb-5 font-medium" [style.color]="theme().textPrimary">
                         Detalle de coberturas y especialidades fotográficas disponibles:
                       </p>
                       
                       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
                         @for (service of item.servicesList; track service.title) {
-                          <div class="p-3.5 rounded-xl bg-neutral-50 border border-neutral-100/80 hover:bg-neutral-100/70 transition">
+                          <div 
+                            class="p-3.5 rounded-xl border transition"
+                            [style.backgroundColor]="theme().badgeBg"
+                            [style.borderColor]="theme().borderColor"
+                          >
                             <div class="flex items-center gap-2 mb-1">
                               <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                              <h4 class="font-bold text-xs sm:text-sm text-neutral-900 tracking-tight">
+                              <h4 class="font-bold text-xs sm:text-sm tracking-tight" [style.color]="theme().textPrimary">
                                 {{ service.title }}
                               </h4>
                             </div>
-                            <p class="text-xs text-neutral-600 leading-normal pl-3.5">
+                            <p class="text-xs leading-normal pl-3.5" [style.color]="theme().textSecondary">
                               {{ service.desc }}
                             </p>
                           </div>
@@ -138,7 +256,7 @@ export interface FaqItem {
 
                     <!-- Q2 / Q3: Párrafos de detalles -->
                     @if (item.answerDetails) {
-                      <div class="space-y-3 text-neutral-600">
+                      <div class="space-y-3" [style.color]="theme().textSecondary">
                         @for (paragraph of item.answerDetails; track $index) {
                           <p>{{ paragraph }}</p>
                         }
@@ -147,10 +265,10 @@ export interface FaqItem {
 
                     <!-- CTA en la respuesta 3 (WhatsApp) -->
                     @if (item.hasCta) {
-                      <div class="mt-6 pt-5 border-t border-neutral-200/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-amber-50/60 p-4 rounded-xl border border-amber-200/50">
+                      <div class="mt-6 pt-5 border-t border-amber-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-amber-500/10 p-4 rounded-xl border">
                         <div>
-                          <span class="text-xs font-bold text-amber-950 block">¿Querés una cotización personalizada?</span>
-                          <span class="text-[11px] text-amber-800/90 block mt-0.5">Escribime directamente para coordinar fechas y disponibilidad.</span>
+                          <span class="text-xs font-bold text-amber-500 block">¿Querés una cotización personalizada?</span>
+                          <span class="text-[11px] opacity-90 block mt-0.5" [style.color]="theme().textSecondary">Escribime directamente para coordinar fechas y disponibilidad.</span>
                         </div>
                         
                         <a 
@@ -178,13 +296,15 @@ export interface FaqItem {
         <div 
           appScrollReveal="fade-up"
           [revealDelay]="220"
-          class="mt-12 sm:mt-16 text-center sm:text-left p-6 sm:p-8 rounded-2xl bg-white border border-neutral-200/80 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-5"
+          class="mt-12 sm:mt-16 text-center sm:text-left p-6 sm:p-8 rounded-2xl border shadow-sm flex flex-col sm:flex-row items-center justify-between gap-5 transition"
+          [style.backgroundColor]="theme().cardBg"
+          [style.borderColor]="theme().cardBorder"
         >
           <div class="text-left w-full sm:w-auto">
-            <h4 class="text-sm sm:text-base font-bold text-neutral-900">
+            <h4 class="text-sm sm:text-base font-bold transition-colors" [style.color]="theme().textPrimary">
               ¿Tenés otra duda o un proyecto especial?
             </h4>
-            <p class="text-xs sm:text-sm text-neutral-500 mt-1">
+            <p class="text-xs sm:text-sm mt-1 transition-colors" [style.color]="theme().textSecondary">
               Podemos diseñar una propuesta a la medida exacta de tus requerimientos.
             </p>
           </div>
@@ -192,7 +312,10 @@ export interface FaqItem {
           <div class="flex flex-col sm:flex-row items-center gap-2.5 w-full sm:w-auto shrink-0">
             <a 
               href="#contact"
-              class="w-full sm:w-auto min-h-[44px] flex items-center justify-center px-5 py-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-xs font-semibold rounded-full transition"
+              class="w-full sm:w-auto min-h-[44px] flex items-center justify-center px-5 py-2.5 text-xs font-semibold rounded-full border transition"
+              [style.backgroundColor]="theme().badgeBg"
+              [style.borderColor]="theme().borderColor"
+              [style.color]="theme().textPrimary"
             >
               Formulario
             </a>
@@ -216,9 +339,17 @@ export interface FaqItem {
 })
 export class FaqComponent {
   readonly siteContentService = inject(SiteContentService);
+  readonly authService = inject(AuthService);
+  private readonly toastService = inject(ToastService);
 
-  // Accordion state: by default all questions start collapsed (null)
   readonly openIndex = signal<number | null>(null);
+  readonly showBgPicker = signal<boolean>(false);
+  readonly colorPresets = ['#faf9f6', '#edf3f8', '#f5eedc', '#f4f4f5', '#e8ece6', '#f0e8e2', '#18181b', '#ffffff'];
+
+  readonly theme = computed(() => {
+    const bg = this.siteContentService.content().faqBgColor || '#faf9f6';
+    return getContrastTheme(bg);
+  });
 
   readonly faqItems: FaqItem[] = [
     {
@@ -281,5 +412,44 @@ export class FaqComponent {
 
   toggle(index: number) {
     this.openIndex.update(current => (current === index ? null : index));
+  }
+
+  onSelectBg(color: string) {
+    this.siteContentService.updateContent({ faqBgColor: color }).subscribe({
+      next: () => {
+        this.toastService.success(`Fondo de FAQ actualizado a ${color}`);
+      }
+    });
+  }
+
+  onLiveBg(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input && input.value) {
+      this.siteContentService.content.update(curr => ({ ...curr, faqBgColor: input.value }));
+    }
+  }
+
+  onSaveBg(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input && input.value) {
+      this.onSelectBg(input.value);
+    }
+  }
+
+  onSaveBgText(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input && input.value.trim()) {
+      let val = input.value.trim();
+      if (!val.startsWith('#') && (val.length === 3 || val.length === 6)) val = '#' + val;
+      this.onSelectBg(val);
+    }
+  }
+
+  activateSection() {
+    this.siteContentService.updateContent({ isFaqVisible: true }).subscribe({
+      next: () => {
+        this.toastService.success('Sección "FAQ" activada y pública');
+      }
+    });
   }
 }

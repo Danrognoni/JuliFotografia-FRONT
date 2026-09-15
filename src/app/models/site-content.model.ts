@@ -42,4 +42,10 @@ export interface SiteContent {
   portfolioTitle?: string;
   portfolioBgColor?: string;
   globalFont?: string;
+  sobreMiBgColor?: string;
+  faqBgColor?: string;
+  contactoBgColor?: string;
+  isFaqVisible?: boolean;
+  isSobreMiVisible?: boolean;
+  isContactoVisible?: boolean;
 }

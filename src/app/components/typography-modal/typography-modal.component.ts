@@ -189,6 +189,7 @@ export class TypographyModalComponent implements OnInit {
   readonly saving = signal<boolean>(false);
 
   readonly fontCatalog: TypographyOption[] = [
+    // 1. SERIF EDITORIALES Y ELEGANTES
     {
       id: 'playfair',
       name: 'Playfair Display',
@@ -219,6 +220,38 @@ export class TypographyModalComponent implements OnInit {
       sampleDescription: 'Trazos finos y sensuales evocando publicaciones de alta gama y libros de arte.',
       badge: 'Alta Costura'
     },
+    {
+      id: 'bodoni',
+      name: 'Bodoni Moda',
+      category: 'Serif',
+      categoryLabel: 'Didone / Lujo',
+      fontFamily: "'Bodoni Moda', Georgia, serif",
+      sampleHeadline: 'Editorial de Alta Costura',
+      sampleDescription: 'Contraste dramático entre astas gruesas y perfiles delgadísimos.',
+      badge: 'Moda & Lujo'
+    },
+    {
+      id: 'dm-serif',
+      name: 'DM Serif Display',
+      category: 'Serif',
+      categoryLabel: 'Serif Transicional',
+      fontFamily: "'DM Serif Display', Georgia, serif",
+      sampleHeadline: 'Tiempos & Memorias Vivas',
+      sampleDescription: 'Formas robustas y delicadeza en serifs para titulares con peso poético.',
+      badge: 'Editorial Fino'
+    },
+    {
+      id: 'prata',
+      name: 'Prata',
+      category: 'Serif',
+      categoryLabel: 'Didone Elegante',
+      fontFamily: "'Prata', Georgia, serif",
+      sampleHeadline: 'Luz Natural & Sensibilidad',
+      sampleDescription: 'Estructuras orgánicas y serifas en forma de lágrima que transmiten refinamiento.',
+      badge: 'Refinado'
+    },
+
+    // 2. SANS-SERIF MODERNAS Y MINIMALISTAS
     {
       id: 'montserrat',
       name: 'Montserrat',
@@ -252,8 +285,8 @@ export class TypographyModalComponent implements OnInit {
     {
       id: 'syne',
       name: 'Syne',
-      category: 'Display',
-      categoryLabel: 'Display Vanguardista',
+      category: 'Sans-Serif',
+      categoryLabel: 'Sans Disruptivo',
       fontFamily: "'Syne', sans-serif",
       sampleHeadline: 'Contraste Artístico Radical',
       sampleDescription: 'Personalidad audaz y disruptiva creada originalmente para el centro de arte Artagon.',
@@ -262,11 +295,11 @@ export class TypographyModalComponent implements OnInit {
     {
       id: 'space-grotesk',
       name: 'Space Grotesk',
-      category: 'Display',
+      category: 'Sans-Serif',
       categoryLabel: 'Sans Brutalista',
       fontFamily: "'Space Grotesk', sans-serif",
       sampleHeadline: 'Estructuras Monolíticas',
-      sampleDescription: 'Raíces monospace adaptadas a proporciones proporcionales con impronta estética técnica.',
+      sampleDescription: 'Raíces monospace adaptadas a proporciones proporcionales con impronta técnica.',
       badge: 'Editorial Técnico'
     },
     {
@@ -280,34 +313,46 @@ export class TypographyModalComponent implements OnInit {
       badge: 'Minimalista'
     },
     {
-      id: 'lora',
-      name: 'Lora',
-      category: 'Serif',
-      categoryLabel: 'Serif Caligráfico',
-      fontFamily: "'Lora', Georgia, serif",
-      sampleHeadline: 'Memorias de Viaje',
-      sampleDescription: 'Serif contemporáneo con raíces caligráficas cálidas y gran contraste rítmico.',
-      badge: 'Narrativa'
-    },
-    {
-      id: 'bodoni',
-      name: 'Bodoni Moda',
-      category: 'Serif',
-      categoryLabel: 'Didone / Lujo',
-      fontFamily: "'Bodoni Moda', Georgia, serif",
-      sampleHeadline: 'Editorial de Alta Costura',
-      sampleDescription: 'Contraste dramático entre astas gruesas y perfiles delgadísimos.',
-      badge: 'Moda & Lujo'
-    },
-    {
-      id: 'dm-sans',
-      name: 'DM Sans',
+      id: 'manrope',
+      name: 'Manrope',
       category: 'Sans-Serif',
-      categoryLabel: 'Sans Geométrico Limpio',
-      fontFamily: "'DM Sans', sans-serif",
-      sampleHeadline: 'Equilibrio & Serenidad',
-      sampleDescription: 'Líneas puras, bajo contraste y versatilidad absoluta en todo tipo de pantallas.',
-      badge: 'Estudio de Diseño'
+      categoryLabel: 'Sans Geométrico Moderno',
+      fontFamily: "'Manrope', sans-serif",
+      sampleHeadline: 'Equilibrio & Alta Precisión',
+      sampleDescription: 'Cruce refinado entre grotesco y geométrico con una armonía visual impecable.',
+      badge: 'Contemporáneo'
+    },
+
+    // 3. DISPLAY Y ARTÍSTICAS
+    {
+      id: 'italiana',
+      name: 'Italiana',
+      category: 'Display',
+      categoryLabel: 'Display de Revista',
+      fontFamily: "'Italiana', Georgia, serif",
+      sampleHeadline: 'Belleza & Arquitectura Clásica',
+      sampleDescription: 'Inspirada en la caligrafía maestra italiana, diseñada para revistas de lujo y moda.',
+      badge: 'Alta Costura'
+    },
+    {
+      id: 'abril-fatface',
+      name: 'Abril Fatface',
+      category: 'Display',
+      categoryLabel: 'Didone Titular Fuerte',
+      fontFamily: "'Abril Fatface', Georgia, serif",
+      sampleHeadline: 'Impacto Visual & Drama',
+      sampleDescription: 'Astas ultra gruesas y terminales elegantes para titulares de máxima presencia.',
+      badge: 'Gran Formato'
+    },
+    {
+      id: 'cinzel-decorative',
+      name: 'Cinzel Decorative',
+      category: 'Display',
+      categoryLabel: 'Display Imperial',
+      fontFamily: "'Cinzel Decorative', Georgia, serif",
+      sampleHeadline: 'Simbología & Majestuosidad',
+      sampleDescription: 'Variante ornamental de Cinzel con florituras y remates clásicos deslumbrantes.',
+      badge: 'Artístico'
     }
   ];
 

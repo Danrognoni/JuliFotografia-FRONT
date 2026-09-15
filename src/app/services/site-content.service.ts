@@ -49,7 +49,13 @@ const defaultSiteContent: SiteContent = {
   copyrightText: '© 2026 Julieta Marateo. All rights reserved.',
   portfolioTitle: 'PORTFOLIO & EXPEDICIONES',
   portfolioBgColor: '#edf3f8',
-  globalFont: 'Playfair Display'
+  globalFont: 'Playfair Display',
+  sobreMiBgColor: '#faf9f6',
+  faqBgColor: '#faf9f6',
+  contactoBgColor: '#ffffff',
+  isFaqVisible: true,
+  isSobreMiVisible: true,
+  isContactoVisible: true
 };
 
 @Injectable({
@@ -91,7 +97,10 @@ export class SiteContentService {
   applyGlobalFont(fontName?: string): void {
     if (typeof document === 'undefined') return;
     const font = fontName || this.content().globalFont || 'Playfair Display';
-    const serifFonts = ['Playfair Display', 'Cinzel', 'Cormorant Garamond', 'Lora', 'Bodoni Moda'];
+    const serifFonts = [
+      'Playfair Display', 'Cinzel', 'Cormorant Garamond', 'Lora', 'Bodoni Moda',
+      'DM Serif Display', 'Prata', 'Abril Fatface', 'Cinzel Decorative'
+    ];
     const fallback = serifFonts.includes(font) ? 'Georgia, serif' : 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif';
     const fullFamily = `'${font}', ${fallback}`;
 
