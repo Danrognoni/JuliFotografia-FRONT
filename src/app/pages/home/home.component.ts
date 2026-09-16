@@ -53,6 +53,9 @@ import { Photo } from '../../models/photo.model';
       <app-header 
         (toggleLogin)="showLoginModal.set(true)"
         (editHeader)="openEditHeaderModal()"
+        (openInbox)="showInboxModal.set(true)"
+        (openUploadPhoto)="openNewPhotoModal()"
+        (openTypographyModal)="showTypographyModal.set(true)"
       />
 
       <!-- Main Dennis Wanderlight Presentation Flow -->

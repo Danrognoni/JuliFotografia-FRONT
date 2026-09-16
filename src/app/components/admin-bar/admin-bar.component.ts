@@ -10,7 +10,7 @@ import { ToastService } from '../../services/toast.service';
   imports: [CommonModule],
   template: `
     @if (authService.isAdmin()) {
-      <div class="fixed top-0 left-0 right-0 z-[9980] bg-neutral-900/95 backdrop-blur-md text-white border-b border-neutral-800 text-xs py-2 px-4 shadow-xl">
+      <div class="hidden md:block fixed top-0 left-0 right-0 z-[9980] bg-neutral-900/95 backdrop-blur-md text-white border-b border-neutral-800 text-xs py-2 px-4 shadow-xl">
         <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <!-- Status indicator -->
           <div class="flex items-center gap-2.5">
