@@ -4,6 +4,9 @@ import { HeaderComponent } from '../../components/header/header.component';
 import { HeroComponent } from '../../components/hero/hero.component';
 import { StoryCardComponent } from '../../components/story-card/story-card.component';
 import { PortfolioComponent } from '../../components/portfolio/portfolio.component';
+import { PhysicalShowcaseComponent } from '../../components/physical-showcase/physical-showcase.component';
+import { PhysicalPhotoModalComponent } from '../../components/physical-photo-modal/physical-photo-modal.component';
+import { PhysicalStoreConfigModalComponent } from '../../components/physical-store-config-modal/physical-store-config-modal.component';
 import { AboutComponent } from '../../components/about/about.component';
 import { FaqComponent } from '../../components/faq/faq.component';
 import { ContactComponent } from '../../components/contact/contact.component';
@@ -16,8 +19,10 @@ import { PhotoModalComponent } from '../../components/photo-modal/photo-modal.co
 import { InboxModalComponent } from '../../components/inbox-modal/inbox-modal.component';
 import { TypographyModalComponent } from '../../components/typography-modal/typography-modal.component';
 import { SiteContentService } from '../../services/site-content.service';
+import { PhysicalStoreService } from '../../services/physical-store.service';
 import { AuthService } from '../../services/auth.service';
 import { Photo } from '../../models/photo.model';
+import { PhysicalPhotoItem } from '../../models/physical-photo.model';
 
 @Component({
   selector: 'app-home',
@@ -27,6 +32,9 @@ import { Photo } from '../../models/photo.model';
     HeaderComponent,
     HeroComponent,
     PortfolioComponent,
+    PhysicalShowcaseComponent,
+    PhysicalPhotoModalComponent,
+    PhysicalStoreConfigModalComponent,
     StoryCardComponent,
     AboutComponent,
     FaqComponent,
@@ -76,7 +84,16 @@ import { Photo } from '../../models/photo.model';
           (editStory)="openEditStoryModal()"
         />
 
-        <!-- 4. About Me / The Story -->
+        <!-- 4. Fotos Físicas (Showcase & Venta Directa de Obras) -->
+        @if (physicalStoreService.config().isVisible !== false || authService.isAdmin()) {
+          <app-physical-showcase 
+            (editConfig)="showPhysicalStoreConfigModal.set(true)"
+            (addPhoto)="openNewPhysicalPhotoModal()"
+            (editPhoto)="openEditPhysicalPhotoModal($event)"
+          />
+        }
+
+        <!-- 5. About Me / The Story -->
         @if (siteContentService.content().isSobreMiVisible !== false || authService.isAdmin()) {
           <app-about 
             (editAbout)="openEditAboutModal()"
@@ -133,11 +150,25 @@ import { Photo } from '../../models/photo.model';
       @if (showTypographyModal()) {
         <app-typography-modal (close)="showTypographyModal.set(false)" />
       }
+
+      @if (showPhysicalPhotoModal()) {
+        <app-physical-photo-modal 
+          [photoToEdit]="selectedPhysicalPhotoToEdit"
+          (close)="showPhysicalPhotoModal.set(false)"
+        />
+      }
+
+      @if (showPhysicalStoreConfigModal()) {
+        <app-physical-store-config-modal 
+          (close)="showPhysicalStoreConfigModal.set(false)"
+        />
+      }
     </div>
   `
 })
 export class HomeComponent implements OnInit {
   readonly siteContentService = inject(SiteContentService);
+  readonly physicalStoreService = inject(PhysicalStoreService);
   readonly authService = inject(AuthService);
 
   readonly showLoginModal = signal(false);
@@ -145,13 +176,27 @@ export class HomeComponent implements OnInit {
   readonly showPhotoModal = signal(false);
   readonly showInboxModal = signal(false);
   readonly showTypographyModal = signal(false);
+  readonly showPhysicalPhotoModal = signal(false);
+  readonly showPhysicalStoreConfigModal = signal(false);
 
   selectedPhotoToEdit: Photo | null = null;
+  selectedPhysicalPhotoToEdit: PhysicalPhotoItem | null = null;
   activeEditTitle = '';
   activeEditFields: EditFieldConfig[] = [];
 
   ngOnInit() {
     this.siteContentService.loadContent().subscribe();
+    this.physicalStoreService.loadStore(this.authService.isAdmin());
+  }
+
+  openNewPhysicalPhotoModal() {
+    this.selectedPhysicalPhotoToEdit = null;
+    this.showPhysicalPhotoModal.set(true);
+  }
+
+  openEditPhysicalPhotoModal(photo: PhysicalPhotoItem) {
+    this.selectedPhysicalPhotoToEdit = photo;
+    this.showPhysicalPhotoModal.set(true);
   }
 
   openEditPortfolioModal() {

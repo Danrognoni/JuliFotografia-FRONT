@@ -2,6 +2,7 @@ import { Component, EventEmitter, Output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { SiteContentService } from '../../services/site-content.service';
+import { PhysicalStoreService } from '../../services/physical-store.service';
 import { ToastService } from '../../services/toast.service';
 
 @Component({
@@ -46,7 +47,7 @@ import { ToastService } from '../../services/toast.service';
                 </svg>
                 <span>Secciones</span>
                 <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-neutral-700 text-neutral-300 font-mono">
-                  {{ visibleSectionsCount() }}/3
+                  {{ visibleSectionsCount() }}/4
                 </span>
                 <svg class="w-3 h-3 text-neutral-400 transition-transform" [class.rotate-180]="showSectionsDropdown()" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -136,6 +137,28 @@ import { ToastService } from '../../services/toast.service';
                         ></span>
                       </button>
                     </div>
+
+                    <!-- Toggle 4: Fotos Físicas (Tienda) -->
+                    <div class="flex items-center justify-between p-2 rounded-xl bg-neutral-800/60 border border-neutral-700/50">
+                      <div>
+                        <span class="font-semibold text-xs text-white block">Fotos Físicas</span>
+                        <span class="text-[10px] text-neutral-400">
+                          {{ physicalStoreService.config().isVisible !== false ? 'Pública' : 'Borrador / Oculta' }}
+                        </span>
+                      </div>
+                      <button 
+                        type="button" 
+                        (click)="togglePhysicalStore()"
+                        class="w-11 h-6 rounded-full transition-colors relative focus:outline-none focus:ring-2 focus:ring-amber-400 p-0.5"
+                        [ngClass]="physicalStoreService.config().isVisible !== false ? 'bg-emerald-500' : 'bg-neutral-600'"
+                        title="Alternar visibilidad de Fotos Físicas"
+                      >
+                        <span 
+                          class="w-5 h-5 bg-white rounded-full block shadow-sm transition-transform"
+                          [ngClass]="physicalStoreService.config().isVisible !== false ? 'translate-x-5' : 'translate-x-0'"
+                        ></span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               }
@@ -192,6 +215,7 @@ export class AdminBarComponent {
 
   readonly authService = inject(AuthService);
   readonly siteContentService = inject(SiteContentService);
+  readonly physicalStoreService = inject(PhysicalStoreService);
   private readonly toastService = inject(ToastService);
 
   readonly showSectionsDropdown = signal<boolean>(false);
@@ -202,7 +226,27 @@ export class AdminBarComponent {
     if (c.isSobreMiVisible !== false) count++;
     if (c.isFaqVisible !== false) count++;
     if (c.isContactoVisible !== false) count++;
+    if (this.physicalStoreService.config().isVisible !== false) count++;
     return count;
+  }
+
+  togglePhysicalStore() {
+    const current = this.physicalStoreService.config().isVisible !== false;
+    const next = !current;
+
+    this.physicalStoreService.updateConfig({ isVisible: next }).subscribe({
+      next: () => {
+        if (next) {
+          this.toastService.success('Sección "Fotos Físicas" visible para todos los visitantes');
+        } else {
+          this.toastService.info('Sección "Fotos Físicas" oculta al público (Modo Borrador)');
+        }
+      },
+      error: (err) => {
+        console.error(err);
+        this.toastService.error('Error al actualizar la visibilidad de "Fotos Físicas"');
+      }
+    });
   }
 
   toggleSection(key: 'isSobreMiVisible' | 'isFaqVisible' | 'isContactoVisible', label: string) {

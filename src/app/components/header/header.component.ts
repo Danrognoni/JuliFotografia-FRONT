@@ -2,6 +2,7 @@ import { Component, EventEmitter, Output, inject, signal, computed, HostListener
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { SiteContentService } from '../../services/site-content.service';
+import { PhysicalStoreService } from '../../services/physical-store.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
 import { isLightColor } from '../../utils/color-contrast.util';
@@ -104,6 +105,21 @@ import { isLightColor } from '../../utils/color-contrast.util';
           >
             {{ siteContentService.content().menuPortfolio || 'Portfolio' }}
           </a>
+
+          <!-- 3. Fotos Físicas (Venta Directa) -->
+          @if (isPhysicalStoreVisible()) {
+            <a 
+              href="#physical-store" 
+              (click)="navigateTo('physical-store', $event)"
+              class="px-3.5 py-1.5 text-xs font-medium transition tracking-wider uppercase hover:underline underline-offset-4 cursor-pointer rounded-lg inline-flex items-center gap-1.5"
+              [ngClass]="navLinkClass('physical-store')"
+            >
+              <span>Fotos Físicas</span>
+              @if (physicalStoreService.config().isVisible === false) {
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">Oculto</span>
+              }
+            </a>
+          }
 
           <!-- 3. Sobre Mí -->
           @if (isSectionVisible('isSobreMiVisible')) {
@@ -290,6 +306,29 @@ import { isLightColor } from '../../utils/color-contrast.util';
               </div>
               <span class="w-1.5 h-1.5 rounded-full" [ngClass]="activeSectionId() === 'portfolio' ? 'bg-amber-400' : 'bg-neutral-600'"></span>
             </a>
+
+            <!-- Fotos Físicas -->
+            @if (isPhysicalStoreVisible()) {
+              <a 
+                href="#physical-store" 
+                (click)="navigateTo('physical-store', $event)"
+                class="min-h-[48px] px-3.5 py-2.5 rounded-xl flex items-center justify-between text-xs font-semibold tracking-wider uppercase transition touch-target-48 cursor-pointer"
+                [ngClass]="activeSectionId() === 'physical-store' ? 'bg-white/15 text-white border border-white/15 shadow-sm' : 'text-neutral-300 hover:text-white hover:bg-white/5 active:bg-white/10'"
+              >
+                <div class="flex items-center gap-3">
+                  <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>Fotos Físicas</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  @if (physicalStoreService.config().isVisible === false) {
+                    <span class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">Oculto</span>
+                  }
+                  <span class="w-1.5 h-1.5 rounded-full" [ngClass]="activeSectionId() === 'physical-store' ? 'bg-amber-400' : 'bg-neutral-600'"></span>
+                </div>
+              </a>
+            }
 
             <!-- Sobre Mí -->
             @if (isSectionVisible('isSobreMiVisible')) {
@@ -578,6 +617,7 @@ export class HeaderComponent implements OnDestroy {
   @Output() openTypographyModal = new EventEmitter<void>();
 
   readonly siteContentService = inject(SiteContentService);
+  readonly physicalStoreService = inject(PhysicalStoreService);
   readonly authService = inject(AuthService);
   readonly toastService = inject(ToastService);
   private readonly platformId = inject(PLATFORM_ID);
@@ -596,6 +636,13 @@ export class HeaderComponent implements OnDestroy {
       return false;
     }
     const content = this.siteContentService.content();
+    if (activeId === 'physical-store') {
+      const bg = this.physicalStoreService.config().backgroundStyle;
+      if (bg && bg.type === 'color') {
+        return isLightColor(bg.value);
+      }
+      return false;
+    }
     if (activeId === 'portfolio') {
       return isLightColor(content.portfolioBgColor || '#edf3f8');
     }
@@ -610,6 +657,11 @@ export class HeaderComponent implements OnDestroy {
     }
     return false;
   });
+
+  isPhysicalStoreVisible(): boolean {
+    if (this.authService.isAdmin()) return true;
+    return this.physicalStoreService.config().isVisible !== false;
+  }
 
   isSectionVisible(key: 'isSobreMiVisible' | 'isFaqVisible' | 'isContactoVisible'): boolean {
     if (this.authService.isAdmin()) return true;
