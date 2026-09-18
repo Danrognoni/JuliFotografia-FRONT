@@ -68,6 +68,19 @@ export class PhysicalStoreService {
       }),
       catchError(err => {
         console.warn('No se pudieron cargar las fotos físicas del servidor', err);
+        // Fallback resiliente: si falló la consulta de admin por 401, cargar catálogo público
+        if (isAdmin && err.status === 401) {
+          return this.http.get<PhysicalPhotoItem[]>(`${environment.apiUrl}/physical-photos`).pipe(
+            tap(list => {
+              this.photos.set(list || []);
+              this.loading.set(false);
+            }),
+            catchError(() => {
+              this.loading.set(false);
+              return of([]);
+            })
+          );
+        }
         this.loading.set(false);
         return of([]);
       })

@@ -15,18 +15,41 @@ export class AuthService {
   readonly token = signal<string | null>(this.getInitialToken());
   readonly currentUser = signal<AuthResponse | null>(this.getInitialUser());
 
-  readonly isAuthenticated = computed(() => !!this.token());
+  readonly isAuthenticated = computed(() => !!this.token() && !this.isTokenExpired(this.token()));
   readonly isAdmin = computed(() => {
     const user = this.currentUser();
     const token = this.token();
-    return !!token && !!user &&
+    return !!token && !this.isTokenExpired(token) && !!user &&
       user.email?.toLowerCase() === 'julietamarateo4@gmail.com' &&
       (user.role === 'ROLE_ADMIN' || user.role === 'ADMIN');
   });
 
+  isTokenExpired(token: string | null): boolean {
+    if (!token) return true;
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return true;
+      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+      if (payload.exp && typeof payload.exp === 'number') {
+        return Date.now() >= payload.exp * 1000;
+      }
+      return false;
+    } catch {
+      return true;
+    }
+  }
+
   private getInitialToken(): string | null {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem(this.tokenKey);
+      const stored = localStorage.getItem(this.tokenKey);
+      if (stored) {
+        if (this.isTokenExpired(stored)) {
+          localStorage.removeItem(this.tokenKey);
+          localStorage.removeItem(this.userKey);
+          return null;
+        }
+        return stored;
+      }
     }
     return null;
   }
@@ -70,6 +93,11 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return this.token();
+    const current = this.token();
+    if (current && this.isTokenExpired(current)) {
+      this.logout();
+      return null;
+    }
+    return current;
   }
 }
