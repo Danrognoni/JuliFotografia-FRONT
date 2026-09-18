@@ -1,5 +1,6 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HeaderComponent } from '../../components/header/header.component';
 import { HeroComponent } from '../../components/hero/hero.component';
 import { StoryCardComponent } from '../../components/story-card/story-card.component';
@@ -21,6 +22,8 @@ import { TypographyModalComponent } from '../../components/typography-modal/typo
 import { SiteContentService } from '../../services/site-content.service';
 import { PhysicalStoreService } from '../../services/physical-store.service';
 import { AuthService } from '../../services/auth.service';
+import { ToastService } from '../../services/toast.service';
+import { MercadoPagoService } from '../../services/mercadopago.service';
 import { Photo } from '../../models/photo.model';
 import { PhysicalPhotoItem } from '../../models/physical-photo.model';
 
@@ -170,6 +173,10 @@ export class HomeComponent implements OnInit {
   readonly siteContentService = inject(SiteContentService);
   readonly physicalStoreService = inject(PhysicalStoreService);
   readonly authService = inject(AuthService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly toastService = inject(ToastService);
+  private readonly mpService = inject(MercadoPagoService);
 
   readonly showLoginModal = signal(false);
   readonly showEditTextModal = signal(false);
@@ -187,6 +194,43 @@ export class HomeComponent implements OnInit {
   ngOnInit() {
     this.siteContentService.loadContent().subscribe();
     this.physicalStoreService.loadStore(this.authService.isAdmin());
+    this.listenToPaymentFeedback();
+  }
+
+  private listenToPaymentFeedback() {
+    this.route.queryParams.subscribe(params => {
+      const feedback = this.mpService.evaluateReturnParams(params);
+      if (feedback.status === 'approved') {
+        this.toastService.success('¡Pago completado con éxito! Muchas gracias por adquirir esta obra de autor.');
+        this.clearPaymentParams();
+      } else if (feedback.status === 'pending') {
+        this.toastService.info('Tu pago se encuentra pendiente de acreditación en Mercado Pago.');
+        this.clearPaymentParams();
+      } else if (feedback.status === 'rejected') {
+        this.toastService.error('El pago no pudo ser completado. Puedes intentar nuevamente o coordinar por WhatsApp.');
+        this.clearPaymentParams();
+      }
+    });
+  }
+
+  private clearPaymentParams() {
+    this.router.navigate([], {
+      queryParams: {
+        status: null,
+        collection_status: null,
+        payment_id: null,
+        collection_id: null,
+        external_reference: null,
+        payment_type: null,
+        merchant_order_id: null,
+        preference_id: null,
+        site_id: null,
+        processing_mode: null,
+        merchant_account_id: null
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   openNewPhysicalPhotoModal() {

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { PhysicalPhotoItem } from '../../models/physical-photo.model';
 import { PhysicalStoreService } from '../../services/physical-store.service';
 import { ToastService } from '../../services/toast.service';
+import { MercadoPagoService } from '../../services/mercadopago.service';
 
 @Component({
   selector: 'app-physical-detail-drawer',
@@ -282,6 +283,7 @@ export class PhysicalDetailDrawerComponent {
 
   readonly storeService = inject(PhysicalStoreService);
   private readonly toastService = inject(ToastService);
+  private readonly mercadoPagoService = inject(MercadoPagoService);
 
   readonly quantity = signal<number>(1);
   readonly isGeneratingPreference = signal<boolean>(false);
@@ -331,10 +333,8 @@ export class PhysicalDetailDrawerComponent {
     this.storeService.createMercadoPagoPreference(this.photo.id, this.quantity()).subscribe({
       next: (res) => {
         this.isGeneratingPreference.set(false);
-        const urlToOpen = res.initPoint || res.sandboxInitPoint;
-        if (urlToOpen) {
-          window.open(urlToOpen, '_blank');
-        } else {
+        const opened = this.mercadoPagoService.openCheckout(res);
+        if (!opened) {
           this.toastService.error('No se pudo obtener el enlace de pago de Mercado Pago');
         }
       },
